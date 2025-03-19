@@ -25,7 +25,8 @@ exports.login = async (req, res) => {
     }
 
     const user = userRows[0];
-    const isMatch = await comparePassword(password, user.password);
+    // const isMatch = await comparePassword(password, user.password);
+    const isMatch = password === user.password;
 
     if (!isMatch) {
       return res
@@ -36,7 +37,12 @@ exports.login = async (req, res) => {
     const accessToken = generateAccessToken(user.user_id);
     const refreshToken = generateRefreshToken(user.user_id);
 
-    res.json({ accessToken, refreshToken, user });
+    res.json({
+      message: "Đăng nhập thành công",
+      accessToken,
+      refreshToken,
+      user,
+    });
   } catch (error) {
     res
       .status(500)
