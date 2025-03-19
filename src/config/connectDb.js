@@ -1,5 +1,5 @@
-const mysql = require('mysql2/promise');
-const dotenv = require('dotenv');
+const mysql = require("mysql2/promise");
+const dotenv = require("dotenv");
 dotenv.config();
 
 const db = mysql.createPool({
@@ -7,17 +7,20 @@ const db = mysql.createPool({
   user: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD || "",
   database: process.env.DB_NAME || "poly_jewelry",
-  port: process.env.PORT || 3306,
+  port: process.env.DB_PORT || 3306, // Sửa PORT thành DB_PORT
+  waitForConnections: true,
+  connectionLimit: 10, // Giới hạn số kết nối
+  queueLimit: 0,
 });
 
 db.getConnection()
-    .then(connection => {
-        console.log("Đã kết nối tới database");
-        connection.release();
-    })
-    .catch(err => {
-        console.error("Lỗi kết nối tới database:", err);
-        throw err;
-    });
+  .then((connection) => {
+    console.log("✅ Đã kết nối database!");
+    connection.release();
+  })
+  .catch((err) => {
+    console.error("❌ Lỗi kết nối database:", err);
+    throw err;
+  });
 
 module.exports = db;

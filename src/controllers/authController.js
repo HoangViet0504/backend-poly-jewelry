@@ -109,9 +109,9 @@ exports.refreshToken = async (req, res) => {
 exports.getAllUser = async (req, res) => {
   try {
     const sql = "SELECT * FROM user"; // Truy vấn lấy danh sách tất cả người dùng
-    const [data] = await db.promise().query(sql); // Dùng promise để truy vấn
+    const [rows] = await db.query(sql); // Dùng await để lấy dữ liệu
 
-    res.json(data);
+    res.json(rows); // Trả về danh sách user
   } catch (error) {
     res.status(500).json({ message: "Lỗi server", error: error.message });
   }
