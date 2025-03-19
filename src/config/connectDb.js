@@ -1,5 +1,5 @@
-const mysql = require("mysql2/promise");
-const dotenv = require("dotenv");
+const mysql = require('mysql2/promise');
+const dotenv = require('dotenv');
 dotenv.config();
 
 const db = mysql.createPool({
@@ -11,13 +11,13 @@ const db = mysql.createPool({
 });
 
 db.getConnection()
-  .then((connection) => {
-    console.log("Đã kết nối tới database");
-    connection.release();
-  })
-  .catch((err) => {
-    console.error("Lỗi kết nối tới database:", err);
-    throw err;
-  });
+    .then(connection => {
+        console.log("Đã kết nối tới database");
+        connection.release();
+    })
+    .catch(err => {
+        console.error("Lỗi kết nối tới database:", err);
+        throw err;
+    });
 
 module.exports = db;

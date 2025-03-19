@@ -109,15 +109,9 @@ exports.refreshToken = async (req, res) => {
 exports.getAllUser = async (req, res) => {
   try {
     const sql = "SELECT * FROM user"; // Truy vấn lấy danh sách tất cả người dùng
-    db.query(sql, (err, data) => {
-      if (err) {
-        return res.status(500).json({
-          message: "Lỗi lấy danh sách người dùng",
-          error: err.message,
-        });
-      }
-      res.json(data);
-    });
+    const [data] = await db.promise().query(sql); // Dùng promise để truy vấn
+
+    res.json(data);
   } catch (error) {
     res.status(500).json({ message: "Lỗi server", error: error.message });
   }
