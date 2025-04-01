@@ -1,47 +1,90 @@
 const db = require("../config/connectDb");
-const {
-  generateAccessToken,
-  generateRefreshToken,
-  verifyToken,
-} = require("../utils/tokenUtils");
-const { comparePassword, hashPassword } = require("../utils/passwordUtils");
+const bcrypt = require("bcrypt");
+require("dotenv").config(); // Load biến môi trường từ .env
+const jwt = require("jsonwebtoken");
+
+const { generateAccessToken, verifyToken } = require("../utils/tokenUtils");
+
+exports.register = async (req, res) => {
+  try {
+    const { first_name, last_name, email, phone, password } = req.body;
+
+    if (!first_name || !last_name || !email || !phone || !password) {
+      return res
+        .status(400)
+        .json({ message: "Vui lòng nhập đầy đủ thông tin" });
+    }
+    // Kiểm tra email hoặc số điện thoại đã tồn tại chưa
+    const [existingUser] = await db.query(
+      "SELECT id_user FROM user WHERE email = ? OR phone = ?",
+      [email, phone]
+    );
+
+    if (existingUser.length > 0) {
+      return res.status(400).json({
+        message: "Email hoặc số điện thoại đã tồn tại",
+      });
+    }
+
+    // Hash mật khẩu
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Thêm user vào database
+    const [result] = await db.query(
+      `INSERT INTO user (first_name, last_name, email, phone, password)
+      VALUES (?, ?, ?, ?, ?)`,
+      [first_name, last_name, email, phone, hashedPassword]
+    );
+
+    // Lấy ID user mới tạo
+    const userId = result.insertId;
+
+    // Tạo JWT token
+    const token = jwt.sign(
+      { id: userId, email, role: 2 },
+      process.env.SECRET_KEY,
+      {
+        expiresIn: "7d",
+      }
+    );
+    await db.query("UPDATE user SET access_token = ? WHERE id_user = ?", [
+      token,
+      userId,
+    ]);
+    res.json({
+      message: "Đăng ký thành công",
+      // user: { id: userId, first_name, last_name, email, phone },
+      // token,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi khi đăng ký", error: error.message });
+  }
+};
 
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log(email, password);
-
-    const [userRows] = await db.query(
-      `
-            SELECT * FROM user WHERE email = ?
-        `,
-      [email]
-    );
+    const [userRows] = await db.query("SELECT * FROM user WHERE email = ?", [
+      email,
+    ]);
 
     if (userRows.length === 0) {
       return res
         .status(404)
         .json({ message: "Email hoặc mật khẩu không đúng" });
     }
-
     const user = userRows[0];
-    // const isMatch = await comparePassword(password, user.password);
-    const isMatch = password === user.password;
-
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res
-        .status(404)
+        .status(400)
         .json({ message: "Email hoặc mật khẩu không đúng" });
     }
-
-    const accessToken = generateAccessToken(user.user_id);
-    const refreshToken = generateRefreshToken(user.user_id);
-
     res.json({
       message: "Đăng nhập thành công",
-      accessToken,
-      refreshToken,
-      user,
+      data: {
+        access_token: user.access_token,
+      },
     });
   } catch (error) {
     res
@@ -50,39 +93,45 @@ exports.login = async (req, res) => {
   }
 };
 
-// INSERT INTO `user` (`user_id`, `firstname`, `lastname`, `avatar_img`, `email`, `phone`, `password`, `points`, `street`, `ward`, `district`, `city`, `postal_code`, `role`, `access_token_forgot_password`, `google_auth_id`) VALUES (NULL, 'Hoang', 'Pham', '', 'hoangpham.works@gmail.com', NULL, 'Hoanghocfpt@123', '0', '', '', '', '', NULL, '2', NULL, NULL);
-exports.register = async (req, res) => {
+exports.me = async (req, res) => {
   try {
-    const { first_name, last_name, email, password } = req.body;
-    // Kiểm tra email đã tồn tại chưa
-    const [userRows] = await db.query(
-      `
-            SELECT * FROM user WHERE email = ?
-        `,
-      [email]
-    );
-    // Nếu đã tồn tại thì trả về thông báo
-    if (userRows.length > 0) {
-      return res.status(400).json({ message: "Email đã tồn tại" });
+    // Lấy token từ header Authorization (Bearer token)
+    const token =
+      req.headers.authorization && req.headers.authorization.split(" ")[1];
+
+    // Nếu không có token, trả về lỗi
+    if (!token) {
+      return res.status(401).json({ message: "Token không hợp lệ" });
     }
 
-    // Hash mật khẩu
-    const hashedPassword = await hashPassword(password);
+    // Giải mã token và kiểm tra tính hợp lệ
+    const decoded = jwt.verify(token, process.env.SECRET_KEY); // SECRET_KEY được lưu trong biến môi trường
 
-    // Thêm user vào database
-    await db.query(
-      `
-            INSERT INTO user ( first_name, last_name, avatar_img, email, phone, password, role, access_token_forgot_password)
-            VALUES (?, ?, '', ?, NULL, ?, 2, NULL)
-        `,
-      [first_name, last_name, email, hashedPassword]
-    );
+    // Lấy ID người dùng từ decoded token
+    const { id } = decoded;
+
+    // Truy vấn thông tin người dùng từ database
+    const [userRows] = await db.query("SELECT * FROM user WHERE id_user = ?", [
+      id,
+    ]);
+
+    // Kiểm tra nếu không tìm thấy người dùng
+    if (userRows.length === 0) {
+      return res.status(404).json({ message: "Người dùng không tồn tại" });
+    }
+
+    const user = userRows[0]; // Lấy thông tin người dùng
+
+    // Trả về thông tin người dùng
     res.json({
-      message: "Đăng ký thành công",
-      user: { first_name, last_name, email },
+      message: "Lấy thông tin thành công",
+      data: { user },
     });
   } catch (error) {
-    res.status(500).json({ message: "Lỗi khi đăng ký", error: error.message });
+    res.status(500).json({
+      message: "Lỗi khi lấy thông tin người dùng",
+      error: error.message,
+    });
   }
 };
 
