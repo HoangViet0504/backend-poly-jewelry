@@ -2,7 +2,6 @@ const db = require("../config/connectDb");
 const bcrypt = require("bcrypt");
 require("dotenv").config(); // Load biến môi trường từ .env
 const jwt = require("jsonwebtoken");
-
 const { generateAccessToken, verifyToken } = require("../utils/tokenUtils");
 
 exports.register = async (req, res) => {

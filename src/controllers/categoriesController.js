@@ -2,144 +2,64 @@ const db = require("../config/connectDb");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-exports.getListUserAdmin = async (req, res) => {
+exports.getListCategoriesAdmin = async (req, res) => {
   try {
     // Truy vấn thông tin người dùng từ database
-    const [userRows] = await db.query(`
+    const [categoriesRows] = await db.query(`
       SELECT 
-  u.*, 
-  a.province, 
-  a.district, 
-  a.ward, 
-  a.specific_address
-FROM user u
-LEFT JOIN address a ON u.id_user = a.id_user WHERE u.is_deleted = 'false';
+        * FROM categories WHERE is_deleted = 'false';
     `);
 
-    if (userRows.length === 0) {
+    if (categoriesRows.length === 0) {
       return res
         .status(404)
-        .json({ message: "Danh sách khách hàng không tồn tại" });
+        .json({ message: "Danh sách danh mục không tồn tại" });
     }
 
-    // Trả về thông tin người dùng
     res.json({
-      message: "Lấy thông tin thành công",
-      data: userRows,
+      message: "Lấy danh mục thành công",
+      data: categoriesRows,
     });
   } catch (error) {
     res.status(500).json({
-      message: "Lỗi khi lấy thông tin người dùng",
+      message: "Lỗi khi lấy danh mục",
       error: error.message,
     });
   }
 };
 
-// exports.getListUserAdminByKeyWord = async (req, res) => {
-//   try {
-//     const { keyword } = req.query;
-//     // Truy vấn thông tin người dùng từ database
-//     if (keyword === "") {
-//       const [userRows] = await db.query(
-//         `
-//         SELECT
-//           u.*,
-//           a.province,
-//           a.district,
-//           a.ward,
-//           a.specific_address
-//         FROM user u
-//         LEFT JOIN address a ON u.id_user = a.id_user
-//         WHERE u.is_deleted = 'false'
-
-//       `
-//       );
-//     } else {
-//       const [userRows] = await db.query(
-//         `
-//         SELECT
-//           u.*,
-//           a.province,
-//           a.district,
-//           a.ward,
-//           a.specific_address
-//         FROM user u
-//         LEFT JOIN address a ON u.id_user = a.id_user
-//         WHERE u.is_deleted = 'false'
-//           AND (
-//             u.first_name LIKE ?
-//             OR u.last_name LIKE ?
-//             OR u.email LIKE ?
-//             OR u.phone LIKE ?
-//           )
-//       `,
-//         [`%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`]
-//       );
-//     }
-
-//     // Trả về thông tin người dùng
-//     res.json({
-//       message: "Lấy thông tin thành công",
-//       data: userRows,
-//     });
-//   } catch (error) {
-//     res.status(500).json({
-//       message: "Lỗi khi lấy thông tin người dùng",
-//       error: error.message,
-//     });
-//   }
-// };
-
-exports.getListUserAdminByKeyWord = async (req, res) => {
+exports.getListCategoriesAdminByKeyWord = async (req, res) => {
   try {
     const { keyword = "" } = req.query;
 
-    let userRows;
+    let categoriesRows;
 
-    if (keyword.trim() === "") {
+    if (keyword === "") {
       // Nếu không có keyword, lấy tất cả người dùng (không bị xóa)
-      [userRows] = await db.query(`
-        SELECT 
-          u.*, 
-          a.province, 
-          a.district, 
-          a.ward, 
-          a.specific_address
-        FROM user u
-        LEFT JOIN address a ON u.id_user = a.id_user 
-        WHERE u.is_deleted = 'false'
+      [categoriesRows] = await db.query(`
+     SELECT  * FROM categories WHERE is_deleted = 'false';
       `);
     } else {
       // Nếu có keyword, lọc theo tên, email hoặc số điện thoại
-      [userRows] = await db.query(
+      [categoriesRows] = await db.query(
         `
-        SELECT 
-          u.*, 
-          a.province, 
-          a.district, 
-          a.ward, 
-          a.specific_address
-        FROM user u
-        LEFT JOIN address a ON u.id_user = a.id_user 
-        WHERE u.is_deleted = 'false' 
+      SELECT 
+        * FROM categories WHERE is_deleted = 'false' 
           AND (
-            u.first_name LIKE ? 
-            OR u.last_name LIKE ? 
-            OR u.email LIKE ? 
-            OR u.phone LIKE ?
+            name LIKE ? 
           )
         `,
-        [`%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`]
+        [`%${keyword}%`]
       );
     }
 
     res.json({
-      message: "Lấy thông tin thành công",
-      data: userRows,
+      message: "Lấy danh mục thành công",
+      data: categoriesRows,
     });
   } catch (error) {
     res.status(500).json({
-      message: "Lỗi khi lấy thông tin người dùng",
+      message: "Lỗi khi lấy danh mục ",
       error: error.message,
     });
   }
@@ -354,31 +274,31 @@ exports.AddUserAdmin = async (req, res) => {
   }
 };
 
-exports.DeleteUserAdminByIsDelete = async (req, res) => {
+exports.DeleteCategoriesAdminByIsDelete = async (req, res) => {
   try {
-    const { id_user } = req.body;
+    const { id } = req.body;
 
     // Kiểm tra thông tin bắt buộc
-    if (!id_user) {
-      return res.status(400).json({ message: "Vui lòng nhập id_user" });
+    if (!id) {
+      return res.status(400).json({ message: "Vui lòng nhập id" });
     }
 
     // Cập nhật trạng thái is_deleted thành true để thực hiện xóa mềm
     const [result] = await db.query(
-      "UPDATE user SET is_deleted = 'true' WHERE id_user = ?",
-      [id_user]
+      "UPDATE categories SET is_deleted = 'true' WHERE id_categories = ?",
+      [id]
     );
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "Người dùng không tồn tại" });
+      return res.status(404).json({ message: "Danh mục không tồn tại" });
     }
 
     res.status(200).json({
-      message: "Xóa người dùng thành công ",
+      message: "Xóa danh mục thành công ",
     });
   } catch (error) {
     res.status(500).json({
-      message: "Lỗi khi xóa người dùng",
+      message: "Lỗi khi xóa danh mục",
       error: error.message,
     });
   }
