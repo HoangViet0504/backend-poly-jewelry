@@ -1,13 +1,17 @@
 const db = require("../config/connectDb");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 
 exports.getListCategoriesAdmin = async (req, res) => {
   try {
     // Truy vấn thông tin người dùng từ database
     const [categoriesRows] = await db.query(`
       SELECT 
-        * FROM categories WHERE is_deleted = 'false';
+        *
+      FROM 
+        categories
+      JOIN 
+        image_categories ON categories.image_categories = image_categories.id_categories
+      WHERE 
+        categories.is_deleted = false;
     `);
 
     if (categoriesRows.length === 0) {
@@ -65,210 +69,108 @@ exports.getListCategoriesAdminByKeyWord = async (req, res) => {
   }
 };
 
-exports.getListUserRemoveAdmin = async (req, res) => {
+exports.getListCategoriesRemoveAdmin = async (req, res) => {
   try {
     // Truy vấn thông tin người dùng từ database
-    const [userRows] = await db.query(`
-      SELECT 
-  u.*, 
-  a.province, 
-  a.district, 
-  a.ward, 
-  a.specific_address
-FROM user u
-LEFT JOIN address a ON u.id_user = a.id_user WHERE u.is_deleted = 'true';
+    const [categoriesRows] = await db.query(`
+      SELECT * FROM categories WHERE is_deleted = 'true';
     `);
 
-    if (userRows.length === 0) {
+    if (categoriesRows.length === 0) {
       return res
         .status(404)
-        .json({ message: "Danh sách khách hàng không tồn tại" });
+        .json({ message: "Danh sách danh mục không tồn tại" });
     }
 
     // Trả về thông tin người dùng
     res.json({
-      message: "Lấy thông tin thành công",
-      data: userRows,
+      message: "Lấy danh mục thành công",
+      data: categoriesRows,
     });
   } catch (error) {
     res.status(500).json({
-      message: "Lỗi khi lấy thông tin người dùng",
+      message: "Lỗi khi lấy danh mục",
       error: error.message,
     });
   }
 };
 
-exports.getUserAdmin = async (req, res) => {
+exports.getCategoriesAdmin = async (req, res) => {
   try {
     const { id } = req.query;
-
     // Truy vấn thông tin người dùng và địa chỉ
-    const [userRows] = await db.query(
+    const [categoriesRows] = await db.query(
       `
       SELECT 
-        u.*, 
-        a.province, 
-        a.district, 
-        a.ward, 
-        a.specific_address
-      FROM user u
-      LEFT JOIN address a ON u.id_user = a.id_user 
-      WHERE u.is_deleted = 'false' AND u.id_user = ?;
+      * FROM categories 
+      WHERE is_deleted = 'false' AND id_categories = ?;
     `,
       [id]
     );
 
-    if (!userRows || userRows.length === 0) {
+    if (!categoriesRows || categoriesRows.length === 0) {
       return res
         .status(404)
-        .json({ message: "Thông tin khách hàng không tồn tại" });
+        .json({ message: "Thông tin danh mục không tồn tại" });
     }
-
-    const user = userRows[0];
-
-    // // Truy ngược lại ID từ tên tỉnh/thành, quận/huyện, phường/xã
-    const [[provinceRow]] = await db.query(
-      `SELECT id FROM province WHERE _name = ? LIMIT 1`,
-      [user.province]
-    );
-
-    const [[districtRow]] = await db.query(
-      `SELECT id FROM district WHERE _name = ? LIMIT 1`,
-      [userRows[0].district]
-    );
-
-    const [[wardRow]] = await db.query(
-      `SELECT id FROM ward WHERE _name = ? LIMIT 1`,
-      [user.ward]
-    );
-
     // Trả về thông tin người dùng kèm theo ID tỉnh, huyện, xã
     res.json({
-      message: "Lấy thông tin thành công",
-      data: {
-        ...user,
-        province_id: provinceRow?.id || null,
-        district_id: districtRow?.id || null,
-        ward_id: wardRow?.id || null,
-      },
+      message: "Lấy thông tin danh mục thành công",
+      data: categoriesRows[0],
     });
   } catch (error) {
     res.status(500).json({
-      message: "Lỗi khi lấy thông tin người dùng",
+      message: "Lỗi khi lấy thông tin danh mục",
       error: error.message,
     });
   }
 };
 
-exports.AddUserAdmin = async (req, res) => {
+exports.AddCategoriesAdmin = async (req, res) => {
   try {
-    const {
-      first_name,
-      last_name,
-      email,
-      password,
-      phone,
-      avatar_img,
-      province,
-      district,
-      ward,
-      specific_address,
-      birthdate,
-    } = req.body;
+    const { name, image_categories } = req.body;
 
     // Kiểm tra thông tin bắt buộc
-    if (
-      !first_name ||
-      !last_name ||
-      !email ||
-      !password ||
-      !phone ||
-      !province ||
-      !district ||
-      !ward ||
-      !specific_address ||
-      !birthdate
-    ) {
+    if (!name) {
       return res
         .status(400)
         .json({ message: "Vui lòng nhập đầy đủ thông tin" });
     }
 
     // Kiểm tra email đã tồn tại chưa
-    const [existingUser] = await db.query(
-      "SELECT * FROM user WHERE email = ?",
-      [email]
+    const [existingCategories] = await db.query(
+      "SELECT * FROM categories WHERE name = ?",
+      [name]
     );
 
-    const [existingPhone] = await db.query(
-      "SELECT * FROM user WHERE phone = ?",
-      [phone]
-    );
-
-    if (existingUser.length > 0) {
-      return res.status(409).json({ message: "Email đã được sử dụng" });
+    if (existingCategories.length > 0) {
+      return res.status(409).json({ message: "Tên danh mục đã tồn tại" });
     }
-    if (existingPhone.length > 0) {
-      return res.status(409).json({ message: "Số điện thoại đã được sử dụng" });
-    }
+    // Chuyển name thành slug
+    const slug = name
+      .toLowerCase()
+      .normalize("NFD") // Bỏ dấu tiếng Việt
+      .replace(/[\u0300-\u036f]/g, "") // Loại bỏ ký tự dấu
+      .replace(/[^a-z0-9 ]/g, "") // Loại bỏ ký tự đặc biệt
+      .trim() // Bỏ khoảng trắng đầu/cuối
+      .replace(/\s+/g, "-"); // Thay khoảng trắng bằng dấu gạch ngang
 
-    // Mã hóa mật khẩu
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Thêm người dùng vào database
     const [result] = await db.query(
-      "INSERT INTO user (first_name, last_name, email, password, phone, avatar_img,birthdate) VALUES (?, ?, ?, ?, ?, ?,?)",
-      [
-        first_name,
-        last_name,
-        email,
-        hashedPassword,
-        phone,
-        avatar_img || null,
-        birthdate,
-      ]
+      "INSERT INTO categories (name ,image_categories, slug) VALUES (?, ?, ?)",
+      [name, image_categories | null, slug]
     );
 
-    const userId = result.insertId;
-    // Thêm địa chỉ vào database
-    await db.query(
-      "INSERT INTO address (province, district, ward, specific_address,id_user) VALUES (?, ?, ?, ?, ?)",
-      [province, district, ward, specific_address, userId]
+    const [newCategoryRows] = await db.query(
+      "SELECT * FROM categories WHERE id_categories = ?",
+      [result.insertId]
     );
-    // Tạo JWT token
-    const token = jwt.sign(
-      { id: userId, email, role: 2 },
-      process.env.SECRET_KEY,
-      {
-        expiresIn: "7d",
-      }
-    );
-    await db.query("UPDATE user SET access_token = ? WHERE id_user = ?", [
-      token,
-      userId,
-    ]);
-
-    // Lấy user mới vừa thêm (nếu cần)
-    const [newUser] = await db.query(
-      `SELECT 
-        u.*, 
-        a.province, 
-        a.district, 
-        a.ward, 
-        a.specific_address
-      FROM user u
-      LEFT JOIN address a ON u.id_user = a.id_user 
-      WHERE u.id_user = ?`,
-      [result.insertId] // Thay `result.insertId` bằng id bạn muốn tìm
-    );
-
     res.status(201).json({
-      message: "Thêm người dùng thành công",
-      data: newUser[0],
+      message: "Thêm danh mục thành công",
+      data: newCategoryRows[0],
     });
   } catch (error) {
     res.status(500).json({
-      message: "Lỗi khi thêm người dùng",
+      message: "Lỗi khi thêm danh mục",
       error: error.message,
     });
   }
@@ -304,178 +206,88 @@ exports.DeleteCategoriesAdminByIsDelete = async (req, res) => {
   }
 };
 
-exports.RevertDeleteUserAdminByIsDelete = async (req, res) => {
+exports.RevertDeleteCategoriesAdminByIsDelete = async (req, res) => {
   try {
-    const { id_user } = req.body;
+    const { id } = req.body;
 
     // Kiểm tra thông tin bắt buộc
-    if (!id_user) {
-      return res.status(400).json({ message: "Vui lòng nhập id_user" });
+    if (!id) {
+      return res.status(400).json({ message: "Vui lòng nhập id" });
     }
 
     // Cập nhật trạng thái is_deleted thành false để khôi phục người dùng
-    const [result] = await db.query(
-      "UPDATE user SET is_deleted = 'false' WHERE id_user = ?",
-      [id_user]
+    await db.query(
+      "UPDATE categories SET is_deleted = 'false' WHERE id_categories = ?",
+      [id]
     );
 
     res.status(200).json({
-      message: "Khôi phục người dùng thành công",
+      message: "Khôi phục danh mục thành công",
     });
   } catch (error) {
     res.status(500).json({
-      message: "Lỗi khi khôi phục người dùng",
+      message: "Lỗi khi khôi phục danh mục",
       error: error.message,
     });
   }
 };
 
-exports.DeleteUserAdmin = async (req, res) => {
+exports.DeleteCategoriesAdmin = async (req, res) => {
   try {
-    const { id_user } = req.body;
+    const { id } = req.body;
 
     // Kiểm tra thông tin bắt buộc
-    if (!id_user) {
-      return res.status(400).json({ message: "Vui lòng nhập id_user" });
+    if (!id) {
+      return res.status(400).json({ message: "Vui lòng nhập id" });
     }
 
     // Xóa người dùng khỏi cơ sở dữ liệu
-    const [result] = await db.query("DELETE FROM user WHERE id_user = ?", [
-      id_user,
-    ]);
-
-    // Kiểm tra nếu không tìm thấy người dùng để xóa
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "Người dùng không tồn tại" });
-    }
+    await db.query("DELETE FROM categories WHERE id_categories = ?", [id]);
 
     res.status(200).json({
-      message: "Xóa người dùng thành công",
+      message: "Xóa danh mục thành công",
     });
   } catch (error) {
     res.status(500).json({
-      message: "Lỗi khi xóa người dùng",
+      message: "Lỗi khi xóa danh mục",
       error: error.message,
     });
   }
 };
 
-exports.UpdateUserAdmin = async (req, res) => {
+exports.UpdateCategoriesAdmin = async (req, res) => {
   try {
-    const {
-      id,
-      first_name,
-      last_name,
-      email,
-      phone,
-      avatar_img,
-      province,
-      ward,
-      district,
-      is_active,
-      role,
-      birthdate,
-      specific_address,
-    } = req.body;
+    const { id, name, image_categories } = req.body;
 
     // Kiểm tra thông tin bắt buộc
-    if (
-      !id ||
-      !first_name ||
-      !last_name ||
-      !email ||
-      !phone ||
-      !province ||
-      !ward ||
-      !district ||
-      !specific_address ||
-      !birthdate ||
-      !is_active ||
-      !role
-    ) {
+    if (!id || !name) {
       return res
         .status(400)
         .json({ message: "Vui lòng nhập đầy đủ thông tin" });
     }
-
-    // Kiểm tra xem người dùng có tồn tại không
-    const [existingUser] = await db.query(
-      "SELECT * FROM user WHERE id_user = ?",
-      [id]
-    );
-
-    if (existingUser.length === 0) {
-      return res.status(404).json({ message: "Người dùng không tồn tại" });
-    }
-
+    const slug = name
+      .toLowerCase()
+      .normalize("NFD") // Bỏ dấu tiếng Việt
+      .replace(/[\u0300-\u036f]/g, "") // Loại bỏ ký tự dấu
+      .replace(/[^a-z0-9 ]/g, "") // Loại bỏ ký tự đặc biệt
+      .trim() // Bỏ khoảng trắng đầu/cuối
+      .replace(/\s+/g, "-"); // Thay khoảng trắng bằng dấu gạch ngang
     // Cập nhật thông tin người dùng
-    const [result] = await db.query(
-      "UPDATE user SET first_name = ?, last_name = ?, email = ?, phone = ?, avatar_img = ?, role=?, is_active=?,birthdate=? WHERE id_user = ?",
-      [
-        first_name,
-        last_name,
-        email,
-        phone,
-        avatar_img || null,
-        role,
-        is_active,
-        birthdate,
-        id,
-      ]
+    await db.query(
+      "UPDATE categories SET name= ? , image_categories = ?, slug = ?   WHERE id_categories = ?",
+      [name, image_categories | null, slug, id]
     );
-    // Kiểm tra địa chỉ tồn tại chưa
-    const [[checkAddress]] = await db.query(
-      "SELECT id_address FROM address WHERE id_user = ?",
+    const [resultCategoryRows] = await db.query(
+      "SELECT * FROM categories WHERE id_categories = ?",
       [id]
     );
-
-    let result_address;
-
-    if (checkAddress) {
-      // Nếu có rồi thì update
-      [result_address] = await db.query(
-        `UPDATE address 
-     SET province = ?, ward = ?, district = ?, specific_address = ? 
-     WHERE id_user = ?`,
-        [province, ward, district, specific_address, id]
-      );
-    } else {
-      // Nếu chưa có thì insert mới
-      [result_address] = await db.query(
-        `INSERT INTO address (province, ward, district, specific_address, id_user)
-     VALUES (?, ?, ?, ?, ?)`,
-        [province, ward, district, specific_address, id]
-      );
-    }
-
-    // Kiểm tra kết quả
-    if (result.affectedRows === 0 || result_address.affectedRows === 0) {
-      return res.status(404).json({
-        message: "Cập nhật thông tin người dùng thất bại",
-      });
-    }
-
-    // Trả về thông tin người dùng đã cập nhật
-    const [updatedUser] = await db.query(
-      `SELECT 
-        u.*, 
-        a.province, 
-        a.district, 
-        a.ward, 
-        a.specific_address
-      FROM user u
-      LEFT JOIN address a ON u.id_user = a.id_user 
-      WHERE u.id_user = ?`,
-      [id]
-    );
-
     res.status(200).json({
-      message: "Cập nhật thông tin người dùng thành công",
-      data: updatedUser[0],
+      message: "Cập nhật thông tin danh mục thành công",
+      data: resultCategoryRows[0],
     });
   } catch (error) {
     res.status(500).json({
-      message: "Lỗi khi cập nhật thông tin người dùng",
+      message: "Lỗi khi cập nhật thông tin danh mục",
       error: error.message,
     });
   }

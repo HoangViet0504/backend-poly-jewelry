@@ -54,10 +54,39 @@ router.get(
   checkAuth,
   categoriesController.getListCategoriesAdminByKeyWord
 );
-
+router.get(
+  "/getListCategoriesRemoveAdmin",
+  checkAuth,
+  categoriesController.getListCategoriesRemoveAdmin
+);
+router.get(
+  "/getCategoriesAdminById",
+  checkAuth,
+  categoriesController.getCategoriesAdmin
+);
 router.post(
   "/DeleteCategoriesAdminByIsDelete",
   checkAuth,
   categoriesController.DeleteCategoriesAdminByIsDelete
+);
+router.post(
+  "/AddCategoriesAdmin",
+  checkAuth,
+  categoriesController.AddCategoriesAdmin
+);
+router.post(
+  "/RevertDeleteCategoriesAdminByIsDelete",
+  checkAuth,
+  categoriesController.RevertDeleteCategoriesAdminByIsDelete
+);
+router.post(
+  "/DeleteCategoriesAdmin",
+  checkAuth,
+  categoriesController.DeleteCategoriesAdmin
+);
+router.post(
+  "/UpdateCategoriesAdmin",
+  checkAuth,
+  categoriesController.UpdateCategoriesAdmin
 );
 module.exports = router;
