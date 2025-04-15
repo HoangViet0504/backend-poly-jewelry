@@ -5,6 +5,8 @@ const userController = require("../controllers/userController");
 const checkAuth = require("../middleware/checkAuth");
 const addressController = require("../controllers/addressController");
 const categoriesController = require("../controllers/categoriesController");
+const productsController = require("../controllers/productsController");
+const voucherController = require("../controllers/vouchersController");
 //Router AUTH
 router.post("/auth/login", authController.login);
 router.post("/auth/register", authController.register);
@@ -89,4 +91,71 @@ router.post(
   checkAuth,
   categoriesController.UpdateCategoriesAdmin
 );
+// products
+router.get(
+  "/getListProductsAdmin",
+  checkAuth,
+  productsController.getListProductsAdmin
+);
+router.get(
+  "/getListProductsAdminByKeyWord",
+  checkAuth,
+  productsController.getListProductsAdminByKeyWord
+);
+router.get(
+  "/getListProductsRemoveAdmin",
+  checkAuth,
+  productsController.getListProductsRemoveAdmin
+);
+router.get("/getProductAdmin", checkAuth, productsController.getProductAdmin);
+
+router.post(
+  "/AddProductsAdmin",
+  checkAuth,
+  productsController.AddProductsAdmin
+);
+router.post(
+  "/DeleteProductsAdminByIsDelete",
+  checkAuth,
+  productsController.DeleteProductsAdminByIsDelete
+);
+router.post(
+  "/RevertDeleteProductsAdminByIsDelete",
+  checkAuth,
+  productsController.RevertDeleteProductsAdminByIsDelete
+);
+router.post(
+  "/DeleteProductsAdmin",
+  checkAuth,
+  productsController.DeleteProductsAdmin
+);
+router.post(
+  "/UpdateProductsAdmin",
+  checkAuth,
+  productsController.UpdateProductsAdmin
+);
+// Voucher
+router.get(
+  "/getListVouchersAdmin",
+  checkAuth,
+  voucherController.getListVouchersAdmin
+);
+router.get(
+  "/getListVouchersAdminByKeyWord",
+  checkAuth,
+  voucherController.getListVouchersAdminByKeyWord
+);
+router.get("/getVouchersAdmin", checkAuth, voucherController.getVouchersAdmin);
+router.post("/AddVouchersAdmin", checkAuth, voucherController.AddVouchersAdmin);
+router.post(
+  "/DeleteVouchersAdmin",
+  checkAuth,
+  voucherController.DeleteVouchersAdmin
+);
+router.post(
+  "/UpdateVouchersAdmin",
+  checkAuth,
+  voucherController.UpdateVouchersAdmin
+);
+
 module.exports = router;

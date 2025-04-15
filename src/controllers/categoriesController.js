@@ -4,15 +4,14 @@ exports.getListCategoriesAdmin = async (req, res) => {
   try {
     // Truy vấn thông tin người dùng từ database
     const [categoriesRows] = await db.query(`
-      SELECT 
-        *
+            SELECT 
+        * 
       FROM 
         categories
       JOIN 
-        image_categories ON categories.image_categories = image_categories.id_categories
-      WHERE 
-        categories.is_deleted = false;
-    `);
+        image_categories ON categories.id_categories = image_categories.id_categories
+        WHERE  categories.is_deleted = 'false'
+          `);
 
     if (categoriesRows.length === 0) {
       return res
