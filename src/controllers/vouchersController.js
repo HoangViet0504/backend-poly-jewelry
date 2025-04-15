@@ -1,4 +1,4 @@
-const db = require("../config/connectDb");
+const db = require("../config/connectDB");
 
 exports.getListVouchersAdmin = async (req, res) => {
   try {

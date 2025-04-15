@@ -7,6 +7,10 @@ const addressController = require("../controllers/addressController");
 const categoriesController = require("../controllers/categoriesController");
 const productsController = require("../controllers/productsController");
 const voucherController = require("../controllers/vouchersController");
+const ordersController = require("../controllers/ordersController");
+const categoriesClientController = require("../controllers/client/categoriesClientController");
+const profileClientController = require("../controllers/client/profileController");
+const productsClientController = require("../controllers/client/productsController");
 //Router AUTH
 router.post("/auth/login", authController.login);
 router.post("/auth/register", authController.register);
@@ -108,7 +112,6 @@ router.get(
   productsController.getListProductsRemoveAdmin
 );
 router.get("/getProductAdmin", checkAuth, productsController.getProductAdmin);
-
 router.post(
   "/AddProductsAdmin",
   checkAuth,
@@ -156,6 +159,45 @@ router.post(
   "/UpdateVouchersAdmin",
   checkAuth,
   voucherController.UpdateVouchersAdmin
+);
+// orders
+router.get(
+  "/getListOrdersAdmin",
+  checkAuth,
+  ordersController.getListOrdersAdmin
+);
+router.get(
+  "/getListOrdersAdminByKeyWord",
+  checkAuth,
+  ordersController.getListOrdersAdminByKeyWord
+);
+router.get("/getOrdersAdmin", checkAuth, ordersController.getOrdersAdmin);
+router.post(
+  "/UpdateOrdersAdmin",
+  checkAuth,
+  ordersController.UpdateOrdersAdmin
+);
+
+//  client
+// categories
+router.get("/getListCategories", categoriesClientController.getListCategories);
+// Profile
+router.post("/UpdateUser", profileClientController.UpdateUser);
+router.post("/UpdatePassword", profileClientController.UpdatePassword);
+
+router.get("/getListOrdersClient", profileClientController.getListOrdersClient);
+router.get(
+  "/getListOrdersDetailClient",
+  profileClientController.getListOrdersDetailClient
+);
+// products
+router.get(
+  "/getListProductsByCategoriesClient",
+  productsClientController.getListProductsByCategoriesClient
+);
+router.get(
+  "/getListProductsBySlugClient",
+  productsClientController.getListProductsBySlugClient
 );
 
 module.exports = router;
