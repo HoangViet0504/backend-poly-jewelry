@@ -11,6 +11,7 @@ const ordersController = require("../controllers/ordersController");
 const categoriesClientController = require("../controllers/client/categoriesClientController");
 const profileClientController = require("../controllers/client/profileController");
 const productsClientController = require("../controllers/client/productsController");
+const cartsClientController = require("../controllers/client/cartsClientController");
 //Router AUTH
 router.post("/auth/login", authController.login);
 router.post("/auth/register", authController.register);
@@ -199,5 +200,10 @@ router.get(
   "/getListProductsBySlugClient",
   productsClientController.getListProductsBySlugClient
 );
+router.get("/getListCartByUser", cartsClientController.getListCartByUser);
+router.post("/addProductToCart", cartsClientController.addProductToCart);
+router.post("/deleteCartById", cartsClientController.deleteCartById);
+router.post("/deleteAllCart", cartsClientController.deleteAllCart);
+// router.post("/mergeCart", cartsClientController.mergeCart);
 
 module.exports = router;
