@@ -187,6 +187,7 @@ router.post("/UpdateUser", profileClientController.UpdateUser);
 router.post("/UpdatePassword", profileClientController.UpdatePassword);
 
 router.get("/getListOrdersClient", profileClientController.getListOrdersClient);
+router.get("/getAddressById", profileClientController.getAddressById);
 router.get(
   "/getListOrdersDetailClient",
   profileClientController.getListOrdersDetailClient

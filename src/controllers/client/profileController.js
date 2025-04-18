@@ -12,12 +12,13 @@ exports.UpdateUser = async (req, res) => {
       province,
       district,
       ward,
+      birthdate,
       specific_address,
     } = req.body;
 
     await db.query(
-      "UPDATE user SET first_name= ? , last_name = ?, phone = ? ,avatar_img=?  WHERE id_user = ?",
-      [first_name, last_name, phone, avatar_img, id]
+      "UPDATE user SET first_name= ? , last_name = ?, phone = ? ,avatar_img=?,birthdate=?  WHERE id_user = ?",
+      [first_name, last_name, phone, avatar_img, birthdate, id]
     );
     await db.query(
       "UPDATE address SET province = ?, district = ?, ward = ?, specific_address = ? WHERE id_user = ?",
@@ -92,6 +93,26 @@ exports.getListOrdersDetailClient = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Lỗi khi lấy đơn hàng",
+      error: error.message,
+    });
+  }
+};
+
+exports.getAddressById = async (req, res) => {
+  try {
+    const { id } = req.query;
+    const [resultOrdersRows] = await db.query(
+      "SELECT * FROM address  WHERE id_user = ?",
+      [id]
+    );
+
+    res.status(200).json({
+      message: "Lấy địa chỉ thành công",
+      data: resultOrdersRows,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Lỗi khi lấy địa chỉ",
       error: error.message,
     });
   }

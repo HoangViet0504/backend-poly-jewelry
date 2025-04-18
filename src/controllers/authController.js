@@ -92,9 +92,52 @@ exports.login = async (req, res) => {
   }
 };
 
+// exports.me = async (req, res) => {
+//   try {
+//     // Lấy token từ header Authorization (Bearer token)
+//     const token =
+//       req.headers.authorization && req.headers.authorization.split(" ")[1];
+
+//     // Nếu không có token, trả về lỗi
+//     if (!token) {
+//       return res.status(401).json({ message: "Token không hợp lệ" });
+//     }
+
+//     // Giải mã token và kiểm tra tính hợp lệ
+//     const decoded = jwt.verify(token, process.env.SECRET_KEY); // SECRET_KEY được lưu trong biến môi trường
+
+//     // Lấy ID người dùng từ decoded token
+//     const { id } = decoded;
+
+//     // Truy vấn thông tin người dùng từ database
+//     const [userRows] = await db.query(
+//       "SELECT * FROM user INNER JOIN address ON user.id_user = address.id_user WHERE user.id_user = ?",
+//       [id]
+//     );
+//     console.log(userRows);
+
+//     // Kiểm tra nếu không tìm thấy người dùng
+//     if (userRows.length === 0) {
+//       return res.status(404).json({ message: "Người dùng không tồn tại" });
+//     }
+
+//     const user = userRows[0]; // Lấy thông tin người dùng
+
+//     // Trả về thông tin người dùng
+//     res.json({
+//       message: "Lấy thông tin thành công",
+//       data: { user },
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       message: "Lỗi khi lấy thông tin người dùng",
+//       error: error.message,
+//     });
+//   }
+// };
+
 exports.me = async (req, res) => {
   try {
-    // Lấy token từ header Authorization (Bearer token)
     const token =
       req.headers.authorization && req.headers.authorization.split(" ")[1];
 
@@ -109,22 +152,55 @@ exports.me = async (req, res) => {
     // Lấy ID người dùng từ decoded token
     const { id } = decoded;
 
-    // Truy vấn thông tin người dùng từ database
-    const [userRows] = await db.query("SELECT * FROM user WHERE id_user = ?", [
-      id,
-    ]);
+    // Truy vấn thông tin người dùng và địa chỉ
+    const [userRows] = await db.query(
+      `
+      SELECT 
+        u.*, 
+        a.province, 
+        a.district, 
+        a.ward, 
+        a.specific_address
+      FROM user u
+      LEFT JOIN address a ON u.id_user = a.id_user 
+      WHERE u.is_deleted = 'false' AND u.id_user = ?;
+    `,
+      [id]
+    );
 
-    // Kiểm tra nếu không tìm thấy người dùng
-    if (userRows.length === 0) {
-      return res.status(404).json({ message: "Người dùng không tồn tại" });
+    if (!userRows || userRows.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "Thông tin khách hàng không tồn tại" });
     }
 
-    const user = userRows[0]; // Lấy thông tin người dùng
+    const user = userRows[0];
 
-    // Trả về thông tin người dùng
+    // // Truy ngược lại ID từ tên tỉnh/thành, quận/huyện, phường/xã
+    const [[provinceRow]] = await db.query(
+      `SELECT id FROM province WHERE _name = ? LIMIT 1`,
+      [user.province]
+    );
+
+    const [[districtRow]] = await db.query(
+      `SELECT id FROM district WHERE _name = ? LIMIT 1`,
+      [userRows[0].district]
+    );
+
+    const [[wardRow]] = await db.query(
+      `SELECT id FROM ward WHERE _name = ? LIMIT 1`,
+      [user.ward]
+    );
+
+    // Trả về thông tin người dùng kèm theo ID tỉnh, huyện, xã
     res.json({
       message: "Lấy thông tin thành công",
-      data: { user },
+      data: {
+        ...user,
+        province_id: provinceRow?.id || null,
+        district_id: districtRow?.id || null,
+        ward_id: wardRow?.id || null,
+      },
     });
   } catch (error) {
     res.status(500).json({
