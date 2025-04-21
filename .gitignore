@@ -1,20 +1,20 @@
 # Node.js
-node_modules/
-.env
-dist/
-build/
+node_modules/   # Thư mục chứa các package của Node.js, không cần đẩy lên repository.
+.env            # File chứa các biến môi trường, cần bảo mật, không nên chia sẻ.
+dist/           # Thư mục chứa các file build (sản phẩm cuối cùng), không cần theo dõi.
+build/          # Tương tự như dist/, chứa các file đã được build.
 
 # Logs
-*.log
-logs/
+*.log           # Các file log, thường dùng để debug, không cần đẩy lên repository.
+logs/           # Thư mục chứa các file log.
 
 # IDEs
-.vscode/
-.idea/
+.vscode/        # Cấu hình của Visual Studio Code, không cần chia sẻ.
+.idea/          # Cấu hình của IDE như IntelliJ IDEA, không cần chia sẻ.
 
 # OS files
-.DS_Store
-Thumbs.db
+.DS_Store       # File hệ thống của macOS, không cần thiết.
+Thumbs.db       # File hệ thống của Windows, không cần thiết.
 
 # Test coverage
-coverage/
+coverage/       # Thư mục chứa báo cáo coverage của test, không cần theo dõi.
