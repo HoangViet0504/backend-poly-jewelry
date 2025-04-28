@@ -144,6 +144,50 @@ exports.login = async (req, res) => {
   }
 };
 
+// exports.me = async (req, res) => {
+//   try {
+//     // Lấy token từ header Authorization (Bearer token)
+//     const token =
+//       req.headers.authorization && req.headers.authorization.split(" ")[1];
+
+//     // Nếu không có token, trả về lỗi
+//     if (!token) {
+//       return res.status(401).json({ message: "Token không hợp lệ" });
+//     }
+
+//     // Giải mã token và kiểm tra tính hợp lệ
+//     const decoded = jwt.verify(token, process.env.SECRET_KEY); // SECRET_KEY được lưu trong biến môi trường
+
+//     // Lấy ID người dùng từ decoded token
+//     const { id } = decoded;
+
+//     // Truy vấn thông tin người dùng từ database
+//     const [userRows] = await db.query(
+//       "SELECT * FROM user INNER JOIN address ON user.id_user = address.id_user WHERE user.id_user = ?",
+//       [id]
+//     );
+//     console.log(userRows);
+
+//     // Kiểm tra nếu không tìm thấy người dùng
+//     if (userRows.length === 0) {
+//       return res.status(404).json({ message: "Người dùng không tồn tại" });
+//     }
+
+//     const user = userRows[0]; // Lấy thông tin người dùng
+
+//     // Trả về thông tin người dùng
+//     res.json({
+//       message: "Lấy thông tin thành công",
+//       data: { user },
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       message: "Lỗi khi lấy thông tin người dùng",
+//       error: error.message,
+//     });
+//   }
+// };
+
 exports.me = async (req, res) => {
   try {
     const token =
