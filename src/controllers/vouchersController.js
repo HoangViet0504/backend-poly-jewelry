@@ -2,22 +2,82 @@ const db = require("../config/connectDB");
 
 exports.getListVouchersAdmin = async (req, res) => {
   try {
-    // Truy vấn thông tin người dùng từ database
-    const [vouChersRows] = await db.query(`
-            SELECT 
-        * 
-      FROM 
-        vouchers
-    
-          `);
+    const {
+      keyWord = "",
+      status,
+      type_coupon,
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    const pageNumber = parseInt(page) || 1;
+    const limitNumber = parseInt(limit) || 10;
+    const offset = (pageNumber - 1) * limitNumber;
+
+    let conditions = [];
+    let values = [];
+
+    // Filter theo keyWord
+    if (keyWord) {
+      conditions.push(`(code_coupon  LIKE ? OR description LIKE ?)`);
+      values.push(`%${keyWord}%`, `%${keyWord}%`);
+    }
+
+    // Filter theo status
+    if (status) {
+      conditions.push(`status = ?`);
+      values.push(status);
+    }
+
+    // Filter theo type_coupon
+    if (type_coupon) {
+      conditions.push(`type_coupon = ?`);
+      values.push(type_coupon);
+    }
+
+    // Tạo chuỗi where
+    const whereClause =
+      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+    // Query tổng số lượng để tính meta
+    const [countRows] = await db.query(
+      `
+      SELECT COUNT(*) AS total
+      FROM vouchers
+      ${whereClause}
+    `,
+      values
+    );
+    const total = countRows[0].total;
+
+    // Query dữ liệu vouchers có phân trang
+    const [vouchersRows] = await db.query(
+      `
+      SELECT *
+      FROM vouchers
+      ${whereClause}
+      ORDER BY created_at DESC
+      LIMIT ? OFFSET ?
+    `,
+      [...values, limitNumber, offset]
+    );
 
     res.json({
-      message: "Lấy khuyến mãi thành công",
-      data: vouChersRows,
+      message: "Lấy danh sách khuyến mãi thành công",
+      data: vouchersRows,
+      meta: {
+        totalItems: total,
+        currentPage: pageNumber,
+        totalPages: Math.ceil(total / limitNumber),
+        perPage: limitNumber,
+        showing: `Hiển thị từ ${offset + 1} đến ${
+          offset + vouchersRows.length
+        } của ${total} bản ghi`,
+      },
     });
   } catch (error) {
     res.status(500).json({
-      message: "Lỗi khi lấy khuyến mãi",
+      message: "Lỗi khi lấy danh sách khuyến mãi",
       error: error.message,
     });
   }

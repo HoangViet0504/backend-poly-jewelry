@@ -12,38 +12,41 @@ const categoriesClientController = require("../controllers/client/categoriesClie
 const profileClientController = require("../controllers/client/profileController");
 const productsClientController = require("../controllers/client/productsController");
 const cartsClientController = require("../controllers/client/cartsClientController");
+const commentClientController = require("../controllers/client/commentClientController");
+const checkOut = require("../controllers/client/checkoutClientController");
 //Router AUTH
 router.post("/auth/login", authController.login);
 router.post("/auth/register", authController.register);
 router.get("/auth/me", authController.me);
-
+router.post("/checkEmailRequest", authController.checkEmailRequest);
+router.post("/updatePasswordRequest", authController.updatePasswordRequest);
 // dashboard
 // User
-router.get("/getListUserAdmin", checkAuth, userController.getListUserAdmin);
+router.get("/getListUserAdmin", userController.getListUserAdmin);
 router.get(
   "/getListUserRemoveAdmin",
-  checkAuth,
+
   userController.getListUserRemoveAdmin
 );
 router.get(
   "/getListUserAdminByKeyWord",
-  checkAuth,
+
   userController.getListUserAdminByKeyWord
 );
-router.get("/getUserAdmin", checkAuth, userController.getUserAdmin);
-router.post("/AddUserAdmin", checkAuth, userController.AddUserAdmin);
+router.get("/getUserAdmin", userController.getUserAdmin);
+router.post("/AddUserAdmin", userController.AddUserAdmin);
 router.post(
   "/DeleteUserAdminByIsDelete",
-  checkAuth,
+
   userController.DeleteUserAdminByIsDelete
 );
 router.post(
   "/RevertDeleteUserAdminByIsDelete",
-  checkAuth,
+
   userController.RevertDeleteUserAdminByIsDelete
 );
-router.post("/DeleteUserAdmin", checkAuth, userController.DeleteUserAdmin);
-router.post("/UpdateUserAdmin", checkAuth, userController.UpdateUserAdmin);
+router.post("/DeleteUserAdmin", userController.DeleteUserAdmin);
+router.post("/UpdateUserAdmin", userController.UpdateUserAdmin);
 // address
 router.get("/getAllProvince", addressController.getAllProvince);
 router.get("/getAllDistrictById", addressController.getAllDistrictById);
@@ -53,129 +56,125 @@ router.get("/getAllWardById", addressController.getAllWardById);
 
 router.get(
   "/getListCategoriesAdmin",
-  checkAuth,
+
   categoriesController.getListCategoriesAdmin
 );
 router.get(
   "/getListCategoriesAdminByKeyWord",
-  checkAuth,
+
   categoriesController.getListCategoriesAdminByKeyWord
 );
 router.get(
   "/getListCategoriesRemoveAdmin",
-  checkAuth,
+
   categoriesController.getListCategoriesRemoveAdmin
 );
-router.get(
-  "/getCategoriesAdminById",
-  checkAuth,
-  categoriesController.getCategoriesAdmin
-);
+router.get("/getCategoriesAdminById", categoriesController.getCategoriesAdmin);
 router.post(
   "/DeleteCategoriesAdminByIsDelete",
-  checkAuth,
+
   categoriesController.DeleteCategoriesAdminByIsDelete
 );
 router.post(
   "/AddCategoriesAdmin",
-  checkAuth,
+
   categoriesController.AddCategoriesAdmin
 );
 router.post(
   "/RevertDeleteCategoriesAdminByIsDelete",
-  checkAuth,
+
   categoriesController.RevertDeleteCategoriesAdminByIsDelete
 );
 router.post(
   "/DeleteCategoriesAdmin",
-  checkAuth,
+
   categoriesController.DeleteCategoriesAdmin
 );
 router.post(
   "/UpdateCategoriesAdmin",
-  checkAuth,
+
   categoriesController.UpdateCategoriesAdmin
 );
 // products
 router.get(
   "/getListProductsAdmin",
-  checkAuth,
+
   productsController.getListProductsAdmin
 );
 router.get(
   "/getListProductsAdminByKeyWord",
-  checkAuth,
+
   productsController.getListProductsAdminByKeyWord
 );
 router.get(
   "/getListProductsRemoveAdmin",
-  checkAuth,
+
   productsController.getListProductsRemoveAdmin
 );
-router.get("/getProductAdmin", checkAuth, productsController.getProductAdmin);
+router.get("/getProductAdmin", productsController.getProductAdmin);
 router.post(
   "/AddProductsAdmin",
-  checkAuth,
+
   productsController.AddProductsAdmin
 );
 router.post(
   "/DeleteProductsAdminByIsDelete",
-  checkAuth,
+
   productsController.DeleteProductsAdminByIsDelete
 );
 router.post(
   "/RevertDeleteProductsAdminByIsDelete",
-  checkAuth,
+
   productsController.RevertDeleteProductsAdminByIsDelete
 );
 router.post(
   "/DeleteProductsAdmin",
-  checkAuth,
+
   productsController.DeleteProductsAdmin
 );
 router.post(
   "/UpdateProductsAdmin",
-  checkAuth,
+
   productsController.UpdateProductsAdmin
 );
 // Voucher
 router.get(
   "/getListVouchersAdmin",
-  checkAuth,
+
   voucherController.getListVouchersAdmin
 );
 router.get(
   "/getListVouchersAdminByKeyWord",
-  checkAuth,
+
   voucherController.getListVouchersAdminByKeyWord
 );
-router.get("/getVouchersAdmin", checkAuth, voucherController.getVouchersAdmin);
-router.post("/AddVouchersAdmin", checkAuth, voucherController.AddVouchersAdmin);
+router.get("/getVouchersAdmin", voucherController.getVouchersAdmin);
+router.post("/AddVouchersAdmin", voucherController.AddVouchersAdmin);
 router.post(
   "/DeleteVouchersAdmin",
-  checkAuth,
+
   voucherController.DeleteVouchersAdmin
 );
 router.post(
   "/UpdateVouchersAdmin",
-  checkAuth,
+
   voucherController.UpdateVouchersAdmin
 );
 // orders
 router.get(
   "/getListOrdersAdmin",
-  checkAuth,
+
   ordersController.getListOrdersAdmin
 );
 router.get(
   "/getListOrdersAdminByKeyWord",
-  checkAuth,
+
   ordersController.getListOrdersAdminByKeyWord
 );
-router.get("/getOrdersAdmin", checkAuth, ordersController.getOrdersAdmin);
+router.get("/getOrdersAdmin", ordersController.getOrdersAdmin);
 router.post(
   "/UpdateOrdersAdmin",
-  checkAuth,
+
   ordersController.UpdateOrdersAdmin
 );
 
@@ -187,6 +186,7 @@ router.post("/UpdateUser", profileClientController.UpdateUser);
 router.post("/UpdatePassword", profileClientController.UpdatePassword);
 
 router.get("/getListOrdersClient", profileClientController.getListOrdersClient);
+router.get("/getAddressById", profileClientController.getAddressById);
 router.get(
   "/getListOrdersDetailClient",
   profileClientController.getListOrdersDetailClient
@@ -200,10 +200,58 @@ router.get(
   "/getListProductsBySlugClient",
   productsClientController.getListProductsBySlugClient
 );
+router.get(
+  "/getListProductsSaleDescClient",
+  productsClientController.getListProductsSaleDescClient
+);
+router.get(
+  "/getListProductsCreateDescClient",
+  productsClientController.getListProductsCreateDescClient
+);
+router.get(
+  "/getListProductsSaleClient",
+  productsClientController.getListProductsSaleClient
+);
+router.get("/getProductDetail", productsClientController.getProductDetail);
+router.get(
+  "/getProductSameIdCategories",
+  productsClientController.getProductSameIdCategories
+);
+router.get("/getProductFavorite", productsClientController.getProductFavorite);
+router.post("/addProductFavorite", productsClientController.addProductFavorite);
+
+router.get(
+  "/getListProductFavoriteByUser",
+  productsClientController.getListProductFavoriteByUser
+);
+
 router.get("/getListCartByUser", cartsClientController.getListCartByUser);
 router.post("/addProductToCart", cartsClientController.addProductToCart);
 router.post("/deleteCartById", cartsClientController.deleteCartById);
+router.post("/updateQuantityCart", cartsClientController.updateQuantityCart);
+router.post("/getVoucherByCode", cartsClientController.getVoucherByCode);
+
 router.post("/deleteAllCart", cartsClientController.deleteAllCart);
-// router.post("/mergeCart", cartsClientController.mergeCart);
+router.get(
+  "/getProductDetailInCart",
+  cartsClientController.getProductDetailInCart
+);
+
+router.post("/mergeCart", cartsClientController.mergeCart);
+// comment
+router.get(
+  "/getCommentByIdProduct",
+  commentClientController.getCommentByIdProduct
+);
+router.post(
+  "/postCommentByIdProduct",
+  commentClientController.postCommentByIdProduct
+);
+router.post("/checkOut", checkOut.checkOut);
+router.post("/zaloPayCallback", checkOut.zaloPayCallback);
+router.post("/createOrder", checkOut.createOrder);
+router.post("/createOrderDetail", checkOut.createOrderDetail);
+router.get("/getHistoryCart", checkOut.getHistoryCart);
+router.post("/cancelOrder", checkOut.cancelOrder);
 
 module.exports = router;

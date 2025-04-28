@@ -2,38 +2,119 @@ const db = require("../config/connectDb");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-exports.getListUserAdmin = async (req, res) => {
-  try {
-    // Truy vấn thông tin người dùng từ database
-    const [userRows] = await db.query(`
-      SELECT 
-  u.*, 
-  a.province, 
-  a.district, 
-  a.ward, 
-  a.specific_address
-FROM user u
-LEFT JOIN address a ON u.id_user = a.id_user WHERE u.is_deleted = 'false';
-    `);
+// exports.getListUserAdmin = async (req, res) => {
+//   try {
+//     const {
+//       keyword = "",
+//       status = "",
+//       role = "",
+//       page = 1,
+//       limit = 10,
+//     } = req.query;
 
-    if (userRows.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "Danh sách khách hàng không tồn tại" });
-    }
+//     const offset = (page - 1) * limit;
 
-    // Trả về thông tin người dùng
-    res.json({
-      message: "Lấy thông tin thành công",
-      data: userRows,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Lỗi khi lấy thông tin người dùng",
-      error: error.message,
-    });
-  }
-};
+//     let query = `
+//       SELECT
+//         u.*,
+//         a.province,
+//         a.district,
+//         a.ward,
+//         a.specific_address
+//       FROM user u
+//       LEFT JOIN address a ON u.id_user = a.id_user
+//       WHERE u.is_deleted = 'false'
+//     `;
+
+//     const params = [];
+
+//     if (keyword.trim() !== "") {
+//       query += `
+//         AND (
+//           u.first_name LIKE ?
+//           OR u.last_name LIKE ?
+//           OR u.email LIKE ?
+//           OR u.phone LIKE ?
+//         )
+//       `;
+//       params.push(
+//         `%${keyword}%`,
+//         `%${keyword}%`,
+//         `%${keyword}%`,
+//         `%${keyword}%`
+//       );
+//     }
+
+//     if (status.trim() !== "") {
+//       query += ` AND u.is_active = ? `;
+//       params.push(status);
+//     }
+
+//     if (role.trim() !== "") {
+//       query += ` AND u.role = ? `;
+//       params.push(role);
+//     }
+
+//     query += ` LIMIT ? OFFSET ? `;
+//     params.push(parseInt(limit), parseInt(offset));
+
+//     const [userRows] = await db.query(query, params);
+
+//     // Đếm tổng
+//     let countQuery = `
+//       SELECT COUNT(*) as total
+//       FROM user u
+//       LEFT JOIN address a ON u.id_user = a.id_user
+//       WHERE u.is_deleted = 'false'
+//     `;
+//     const countParams = [];
+
+//     if (keyword.trim() !== "") {
+//       countQuery += `
+//         AND (
+//           u.first_name LIKE ?
+//           OR u.last_name LIKE ?
+//           OR u.email LIKE ?
+//           OR u.phone LIKE ?
+//         )
+//       `;
+//       countParams.push(
+//         `%${keyword}%`,
+//         `%${keyword}%`,
+//         `%${keyword}%`,
+//         `%${keyword}%`
+//       );
+//     }
+
+//     if (status.trim() !== "") {
+//       countQuery += ` AND u.is_active = ? `;
+//       countParams.push(status);
+//     }
+
+//     if (role.trim() !== "") {
+//       countQuery += ` AND u.role = ? `;
+//       countParams.push(role);
+//     }
+
+//     const [[{ total }]] = await db.query(countQuery, countParams);
+
+//     res.json({
+//       message: "Lấy thông tin thành công",
+//       data: userRows,
+//       meta: {
+//         total,
+//         page: parseInt(page),
+//         limit: parseInt(limit),
+//         totalPages: Math.ceil(total / limit),
+//       },
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       message: "Lỗi khi lấy thông tin người dùng",
+//       error: error.message,
+//     });
+//   }
+// };
 
 // exports.getListUserAdminByKeyWord = async (req, res) => {
 //   try {
@@ -89,6 +170,130 @@ LEFT JOIN address a ON u.id_user = a.id_user WHERE u.is_deleted = 'false';
 //     });
 //   }
 // };
+exports.getListUserAdmin = async (req, res) => {
+  try {
+    const {
+      keyword = "",
+      status = "",
+      role = "",
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    const offset = (page - 1) * limit;
+
+    let query = `
+      SELECT 
+        u.*, 
+        a.province, 
+        a.district, 
+        a.ward, 
+        a.specific_address
+      FROM user u
+      LEFT JOIN address a ON u.id_user = a.id_user 
+      WHERE u.is_deleted = 'false'
+    `;
+
+    const params = [];
+
+    if (keyword.trim() !== "") {
+      query += `
+        AND (
+          u.first_name LIKE ? 
+          OR u.last_name LIKE ? 
+          OR u.email LIKE ? 
+          OR u.phone LIKE ?
+        )
+      `;
+      params.push(
+        `%${keyword}%`,
+        `%${keyword}%`,
+        `%${keyword}%`,
+        `%${keyword}%`
+      );
+    }
+
+    if (status.trim() !== "") {
+      query += ` AND u.is_active = ? `;
+      params.push(status);
+    }
+
+    if (role.trim() !== "") {
+      query += ` AND u.role = ? `;
+      params.push(role);
+    }
+
+    query += ` LIMIT ? OFFSET ? `;
+    params.push(parseInt(limit), parseInt(offset));
+
+    const [userRows] = await db.query(query, params);
+
+    // Đếm tổng
+    let countQuery = `
+      SELECT COUNT(*) as total 
+      FROM user u
+      LEFT JOIN address a ON u.id_user = a.id_user 
+      WHERE u.is_deleted = 'false'
+    `;
+    const countParams = [];
+
+    if (keyword.trim() !== "") {
+      countQuery += `
+        AND (
+          u.first_name LIKE ? 
+          OR u.last_name LIKE ? 
+          OR u.email LIKE ? 
+          OR u.phone LIKE ?
+        )
+      `;
+      countParams.push(
+        `%${keyword}%`,
+        `%${keyword}%`,
+        `%${keyword}%`,
+        `%${keyword}%`
+      );
+    }
+
+    if (status.trim() !== "") {
+      countQuery += ` AND u.is_active = ? `;
+      countParams.push(status);
+    }
+
+    if (role.trim() !== "") {
+      countQuery += ` AND u.role = ? `;
+      countParams.push(role);
+    }
+
+    const [[{ total }]] = await db.query(countQuery, countParams);
+
+    const currentPage = parseInt(page);
+    const perPage = parseInt(limit);
+    const totalPages = Math.ceil(total / perPage);
+    const start = total === 0 ? 0 : offset + 1;
+    const end = offset + userRows.length;
+    const showing =
+      total === 0
+        ? "Hiển thị 0 kết quả"
+        : `Hiển thị ${start} đến ${end} trong tổng ${total} kết quả`;
+
+    res.json({
+      message: "Lấy thông tin thành công",
+      data: userRows,
+      meta: {
+        totalItems: total,
+        currentPage,
+        totalPages,
+        perPage,
+        showing,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Lỗi khi lấy thông tin người dùng",
+      error: error.message,
+    });
+  }
+};
 
 exports.getListUserAdminByKeyWord = async (req, res) => {
   try {
