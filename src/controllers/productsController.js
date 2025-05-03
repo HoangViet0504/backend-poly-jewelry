@@ -111,6 +111,118 @@ exports.getListProductsAdmin = async (req, res) => {
   }
 };
 
+exports.getListProductsCollectionAdmin = async (req, res) => {
+  try {
+    const {
+      keyword = "",
+      made = "",
+      id_category = "",
+      status,
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    const offset = (page - 1) * limit;
+
+    let query = `
+      SELECT 
+        products.*, 
+        categories.name AS category_name
+      FROM 
+        products
+      LEFT JOIN 
+        categories ON categories.id_categories = products.id_category
+      WHERE 
+        products.is_deleted = 'false' AND products.id_collection IS NOT NULL
+
+    `;
+
+    const params = [];
+
+    // Thêm các điều kiện nếu có
+    if (keyword?.trim()) {
+      query += ` AND products.name_product LIKE ? `;
+      params.push(`%${keyword}%`);
+    }
+
+    if (made?.trim()) {
+      query += ` AND products.made = ? `;
+      params.push(made);
+    }
+
+    if (id_category?.trim()) {
+      query += ` AND products.id_category = ? `;
+      params.push(id_category);
+    }
+
+    if (status?.trim()) {
+      query += ` AND products.status = ? `;
+      params.push(status);
+    }
+
+    query += ` ORDER BY products.id DESC LIMIT ? OFFSET ? `;
+    params.push(parseInt(limit), parseInt(offset));
+
+    const [productsRows] = await db.query(query, params);
+
+    // Đếm tổng số sản phẩm (KHÔNG cần join categories khi count)
+    let countQuery = `
+      SELECT 
+        COUNT(*) as total
+      FROM 
+        products
+      WHERE 
+        products.is_deleted = 'false' AND products.id_collection IS NOT NULL
+    `;
+
+    const countParams = [];
+
+    if (keyword?.trim()) {
+      countQuery += ` AND products.name_product LIKE ? `;
+      countParams.push(`%${keyword}%`);
+    }
+
+    if (made?.trim()) {
+      countQuery += ` AND products.made = ? `;
+      countParams.push(made);
+    }
+
+    if (id_category?.trim()) {
+      countQuery += ` AND products.id_category = ? `;
+      countParams.push(id_category);
+    }
+
+    if (status?.trim()) {
+      countQuery += ` AND products.status = ? `;
+      countParams.push(status);
+    }
+
+    const [[{ total }]] = await db.query(countQuery, countParams);
+
+    res.json({
+      message: "Lấy sản phẩm thành công",
+      data: productsRows,
+      meta: {
+        totalItems: total,
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / limit),
+        perPage: parseInt(limit),
+        showing:
+          total > 0
+            ? `Hiển thị từ ${offset + 1} đến ${
+                offset + productsRows.length
+              } của ${total} sản phẩm`
+            : "Không có sản phẩm nào",
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Lỗi khi lấy sản phẩm",
+      error: error.message,
+    });
+  }
+};
+
 exports.getListProductsAdminByKeyWord = async (req, res) => {
   try {
     const { keyword = "" } = req.query;
@@ -470,7 +582,7 @@ exports.DeleteProductsAdmin = async (req, res) => {
 
     // Xóa người dùng khỏi cơ sở dữ liệu
     await db.query("DELETE FROM products WHERE id = ?", [id]);
-
+    await db.query("DELETE FROM image_product WHERE id_products = ?", [id]);
     res.status(200).json({
       message: "Xóa sản phẩm thành công",
     });

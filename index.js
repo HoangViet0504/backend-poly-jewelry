@@ -20,12 +20,12 @@
 // app.use("/api/users", userRoutes);
 
 // app.listen(PORT, () => {
-  //   console.log(`Server is running on http://localhost:${PORT}`);
-  // });
-  
-  const express = require("express");
-  const app = require("./src/app.js");
-  var port = 3000;
+//   console.log(`Server is running on http://localhost:${PORT}`);
+// });
+
+const express = require("express");
+const app = require("./src/app.js");
+var port = 3000;
 
 app.use(express.json()); // Middleware để đọc JSON từ request body
 

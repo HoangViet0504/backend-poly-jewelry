@@ -1,23 +1,73 @@
 const db = require("../config/connectDb");
 
-exports.getListOrdersAdmin = async (req, res) => {
+exports.getHistoryCartAdmin = async (req, res) => {
   try {
-    // Truy vấn thông tin người dùng từ database
-    const [vouChersRows] = await db.query(`
-            SELECT 
-        * 
-      FROM 
-        orders INNER JOIN order_detail ON orders.id = order_detail.id_order
-  
-          `);
+    const {
+      keyword = "",
+      status,
+      payment_method,
+      page = 1,
+      limit = 10,
+    } = req.query;
 
-    res.json({
-      message: "Lấy đơn hàng thành công",
-      data: vouChersRows,
+    const pageNumber = Number(page);
+    const limitNumber = Number(limit);
+    const offset = (pageNumber - 1) * limitNumber;
+
+    // Tạo điều kiện WHERE
+    let where = "WHERE 1=1";
+    const values = [];
+
+    if (keyword) {
+      where += " AND (orders.email LIKE ? OR orders.phone LIKE ?)";
+      values.push(`%${keyword}%`, `%${keyword}%`);
+    }
+
+    if (status) {
+      where += " AND orders.status = ?";
+      values.push(status);
+    }
+
+    if (payment_method) {
+      where += " AND orders.payment_method = ?";
+      values.push(payment_method);
+    }
+
+    // Đếm tổng số bản ghi
+    const [countResult] = await db.query(
+      `SELECT COUNT(*) AS total FROM orders 
+       INNER JOIN order_detail ON orders.id = order_detail.id_order 
+       ${where}`,
+      values
+    );
+    const total = countResult[0].total;
+
+    // Lấy dữ liệu có phân trang
+    const [response] = await db.query(
+      `SELECT * FROM orders 
+       INNER JOIN order_detail ON orders.id = order_detail.id_order 
+       ${where} 
+       ORDER BY orders.created_at DESC 
+       LIMIT ? OFFSET ?`,
+      [...values, limitNumber, offset]
+    );
+
+    return res.json({
+      message: "Lấy lịch sử đơn hàng thành công",
+      data: response,
+      meta: {
+        totalItems: total,
+        currentPage: pageNumber,
+        totalPages: Math.ceil(total / limitNumber),
+        perPage: limitNumber,
+        showing: `Hiển thị từ ${offset + 1} đến ${
+          offset + response.length
+        } của ${total} bản ghi`,
+      },
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Lỗi khi lấy đơn hàng",
+    return res.status(500).json({
+      message: "Lỗi khi lấy lịch sử đơn hàng",
       error: error.message,
     });
   }

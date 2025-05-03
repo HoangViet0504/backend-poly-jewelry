@@ -97,39 +97,58 @@ exports.getListProductsByCategoriesClient = async (req, res) => {
 exports.getListProductsBySlugClient = async (req, res) => {
   try {
     const { slug, material, sort, page = 1, keyword } = req.query;
+    console.log(keyword);
 
     const limit = 20;
     const currentPage = parseInt(page) || 1;
     const offset = (currentPage - 1) * limit;
 
+    // Lấy ID danh mục và loại danh mục từ slug
     const [getId] = await db.query(
-      "SELECT id_categories FROM categories WHERE slug_categories = ? ",
+      "SELECT id_categories, type FROM categories WHERE slug_categories = ?",
       [slug]
     );
 
-    const idCategory = getId[0]?.id_categories;
+    const category = getId[0];
 
-    if (!idCategory) {
+    if (!category) {
       return res.status(404).json({
         message: "Không tìm thấy danh mục",
       });
     }
 
-    let baseQuery = "FROM products WHERE id_category = ?";
-    const params = [idCategory];
+    const idCategory = category.id_categories;
+    const categoryType = category.type; // Loại danh mục (category hoặc collection)
 
-    // Filter theo chất liệu nếu có
+    // Câu truy vấn cơ bản
+    let baseQuery = "FROM products WHERE ";
+    const params = [];
+
+    // Lọc theo loại danh mục
+    if (categoryType === "collection") {
+      // Nếu là collection, dùng `id_collection`
+      baseQuery += "id_collection = ?";
+      params.push(idCategory);
+    } else {
+      // Nếu là category, dùng `id_category`
+      baseQuery += "id_category = ?";
+      params.push(idCategory);
+    }
+
+    // Filter theo chất liệu
     if (material) {
       baseQuery += " AND made = ?";
       params.push(material);
     }
 
-    if (keyword !== "") {
-      baseQuery += " AND (name LIKE ? OR description LIKE ?)";
-      params.push(`%${keyword}%`, `%${keyword}%`);
+    // Filter theo keyword nếu có và hợp lệ
+    if (keyword && keyword.trim() !== "") {
+      const keywordValue = `%${keyword.trim()}%`;
+      baseQuery += " AND name_product LIKE ?";
+      params.push(keywordValue);
     }
 
-    // Điều kiện sắp xếp
+    // Xử lý sắp xếp
     let orderBy = "";
     if (sort) {
       switch (sort) {
@@ -153,7 +172,7 @@ exports.getListProductsBySlugClient = async (req, res) => {
       }
     }
 
-    // Lấy tổng số sản phẩm (trước khi phân trang)
+    // Lấy tổng số sản phẩm
     const [countRows] = await db.query(
       `SELECT COUNT(*) as total ${baseQuery}`,
       params
@@ -161,7 +180,7 @@ exports.getListProductsBySlugClient = async (req, res) => {
     const totalItems = countRows[0].total;
     const totalPages = Math.ceil(totalItems / limit);
 
-    // Lấy sản phẩm có phân trang
+    // Lấy danh sách sản phẩm có phân trang
     const [resultProductsRows] = await db.query(
       `SELECT * ${baseQuery} ${orderBy} LIMIT ? OFFSET ?`,
       [...params, limit, offset]
@@ -169,6 +188,7 @@ exports.getListProductsBySlugClient = async (req, res) => {
 
     const startItem = offset + 1;
     const endItem = Math.min(offset + limit, totalItems);
+
     res.status(200).json({
       message: "Lấy sản phẩm thành công",
       data: resultProductsRows,
@@ -278,7 +298,6 @@ exports.getProductFavorite = async (req, res) => {
       "SELECT * FROM favorite WHERE id_user = ?",
       [id_user]
     );
-    console.log(response);
 
     return res.status(200).json({
       message: "Lấy sản phẩm yêu thích thành công",
@@ -368,6 +387,80 @@ exports.addProductFavorite = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       message: "Lỗi khi xử lý yêu thích sản phẩm",
+      error: error.message,
+    });
+  }
+};
+
+exports.getListProductCollection = async (req, res) => {
+  try {
+    const [response] = await db.query(
+      "SELECT * FROM products WHERE quantity > 0 AND id_collection IS NOT NULL ORDER BY id DESC LIMIT 20"
+    );
+    return res.status(200).json({
+      message: "Lấy sản phẩm thành công",
+      data: response,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Lỗi khi lấy sản phẩm",
+      error: error.message,
+    });
+  }
+};
+
+exports.getGroupedImageProductsDetail = async (req, res) => {
+  try {
+    // Lấy danh sách ảnh và thông tin sản phẩm không có phân trang
+    const query = `
+      SELECT 
+        ip.id_image_product, 
+        ip.id_products, 
+        ip.image,
+        p.name_product AS product_name
+      FROM 
+        image_product ip
+      JOIN 
+        products p ON ip.id_products = p.id
+      ORDER BY 
+        ip.id_image_product DESC
+    `;
+
+    // Thực hiện query để lấy dữ liệu
+    const [rows] = await db.query(query);
+
+    // Group dữ liệu theo id_products
+    const grouped = rows.reduce((acc, item) => {
+      const id = item.id_products;
+
+      // Kiểm tra xem đã có id này chưa, nếu chưa thì tạo mới
+      if (!acc[id]) {
+        acc[id] = {
+          id_products: id, // id_products
+          product_name: item.product_name, // tên sản phẩm
+          images: [],
+        };
+      }
+
+      // Thêm hình ảnh vào mảng images
+      acc[id].images.push({
+        id_image_product: item.id_image_product,
+        image: item.image,
+      });
+
+      return acc;
+    }, {});
+
+    // Chuyển đổi object thành mảng để dễ làm việc hơn
+    const result = Object.values(grouped);
+
+    res.json({
+      message: "Lấy danh sách ảnh và sản phẩm thành công",
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Lỗi khi lấy danh sách ảnh và sản phẩm",
       error: error.message,
     });
   }

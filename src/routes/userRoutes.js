@@ -13,13 +13,36 @@ const profileClientController = require("../controllers/client/profileController
 const productsClientController = require("../controllers/client/productsController");
 const cartsClientController = require("../controllers/client/cartsClientController");
 const commentClientController = require("../controllers/client/commentClientController");
+const commentController = require("../controllers/commentsController");
 const checkOut = require("../controllers/client/checkoutClientController");
+const imagesController = require("../controllers/imagesController");
+const overViewController = require("../controllers/overViewController");
 //Router AUTH
 router.post("/auth/login", authController.login);
 router.post("/auth/register", authController.register);
 router.get("/auth/me", authController.me);
 router.post("/checkEmailRequest", authController.checkEmailRequest);
 router.post("/updatePasswordRequest", authController.updatePasswordRequest);
+
+// overview
+router.get("/getRevenueLast30Days", overViewController.getRevenueLast30Days);
+router.get("/getRevenueChartByMode", overViewController.getRevenueChartByMode);
+router.get("/getProductSale", overViewController.getProductSale);
+
+router.get(
+  "/getNewProductCountLast30Days",
+  overViewController.getNewProductCountLast30Days
+);
+router.get(
+  "/getVoucherStatsLast30Days",
+  overViewController.getVoucherStatsLast30Days
+);
+router.get("/getOrderNew", overViewController.getOrderNew);
+
+router.get(
+  "/getTotalOrdersLast30Days",
+  overViewController.getTotalOrdersLast30Days
+);
 // dashboard
 // User
 router.get("/getListUserAdmin", userController.getListUserAdmin);
@@ -51,6 +74,10 @@ router.post("/UpdateUserAdmin", userController.UpdateUserAdmin);
 router.get("/getAllProvince", addressController.getAllProvince);
 router.get("/getAllDistrictById", addressController.getAllDistrictById);
 router.get("/getAllWardById", addressController.getAllWardById);
+
+// comment
+router.get("/getListCommentsAdmin", commentController.getListCommentsAdmin);
+router.post("/DeleteCommentAdmin", commentController.DeleteCommentAdmin);
 
 //  categories
 
@@ -95,11 +122,40 @@ router.post(
 
   categoriesController.UpdateCategoriesAdmin
 );
+
+// images
+router.get(
+  "/getGroupedImageProducts",
+
+  imagesController.getGroupedImageProducts
+);
+router.get(
+  "/getAllProducts",
+
+  imagesController.getAllProducts
+);
+router.post(
+  "/addImageProduct",
+
+  imagesController.addImageProduct
+);
+router.post(
+  "/deletedImageProduct",
+
+  imagesController.deletedImageProduct
+);
+
 // products
 router.get(
   "/getListProductsAdmin",
 
   productsController.getListProductsAdmin
+);
+
+router.get(
+  "/getListProductsCollectionAdmin",
+
+  productsController.getListProductsCollectionAdmin
 );
 router.get(
   "/getListProductsAdminByKeyWord",
@@ -161,11 +217,8 @@ router.post(
   voucherController.UpdateVouchersAdmin
 );
 // orders
-router.get(
-  "/getListOrdersAdmin",
+router.get("/getHistoryCartAdmin", ordersController.getHistoryCartAdmin);
 
-  ordersController.getListOrdersAdmin
-);
 router.get(
   "/getListOrdersAdminByKeyWord",
 
@@ -187,23 +240,35 @@ router.post("/UpdatePassword", profileClientController.UpdatePassword);
 
 router.get("/getListOrdersClient", profileClientController.getListOrdersClient);
 router.get("/getAddressById", profileClientController.getAddressById);
+
 router.get(
   "/getListOrdersDetailClient",
   profileClientController.getListOrdersDetailClient
 );
+
 // products
 router.get(
   "/getListProductsByCategoriesClient",
   productsClientController.getListProductsByCategoriesClient
 );
 router.get(
+  "/getGroupedImageProductsDetail",
+  productsClientController.getGroupedImageProductsDetail
+);
+
+router.get(
   "/getListProductsBySlugClient",
   productsClientController.getListProductsBySlugClient
+);
+router.get(
+  "/getListProductCollection",
+  productsClientController.getListProductCollection
 );
 router.get(
   "/getListProductsSaleDescClient",
   productsClientController.getListProductsSaleDescClient
 );
+
 router.get(
   "/getListProductsCreateDescClient",
   productsClientController.getListProductsCreateDescClient

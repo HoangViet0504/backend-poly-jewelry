@@ -145,6 +145,78 @@ exports.getVouchersAdmin = async (req, res) => {
   }
 };
 
+// exports.AddVouchersAdmin = async (req, res) => {
+//   try {
+//     const {
+//       code_coupon,
+//       description,
+//       start_date,
+//       expires_at,
+//       coupon_min_spend,
+//       coupon_max_spend,
+//       discount,
+//       type_coupon,
+//       quantity,
+//       status,
+//     } = req.body;
+
+//     // Kiểm tra thông tin bắt buộc
+//     if (
+//       !code_coupon ||
+//       !start_date ||
+//       !expires_at ||
+//       !coupon_min_spend ||
+//       !coupon_max_spend ||
+//       !discount ||
+//       !type_coupon
+//     ) {
+//       return res
+//         .status(400)
+//         .json({ message: "Vui lòng nhập đầy đủ thông tin" });
+//     }
+
+//     // Kiểm tra email đã tồn tại chưa
+//     const [existingVouchers] = await db.query(
+//       "SELECT * FROM vouchers WHERE code_coupon = ?",
+//       [code_coupon]
+//     );
+
+//     if (existingVouchers.length > 0) {
+//       return res.status(409).json({ message: "Tên khuyến mãi đã tồn tại" });
+//     }
+
+//     const [result] = await db.query(
+//       "INSERT INTO vouchers (code_coupon,description,start_date,expires_at,coupon_min_spend,coupon_max_spend,discount,type_coupon,status,quantity,created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,NOW())",
+//       [
+//         code_coupon,
+//         description,
+//         start_date,
+//         expires_at,
+//         coupon_min_spend,
+//         coupon_max_spend,
+//         discount,
+//         type_coupon,
+//         status,
+//         quantity,
+//       ]
+//     );
+
+//     const [newVouchersRows] = await db.query(
+//       "SELECT * FROM vouchers WHERE id = ?",
+//       [result.insertId]
+//     );
+//     res.status(201).json({
+//       message: "Thêm khuyến mãi thành công",
+//       data: newVouchersRows[0],
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       message: "Lỗi khi thêm khuyến mãi",
+//       error: error.message,
+//     });
+//   }
+// };
+
 exports.AddVouchersAdmin = async (req, res) => {
   try {
     const {
@@ -160,7 +232,7 @@ exports.AddVouchersAdmin = async (req, res) => {
       status,
     } = req.body;
 
-    // Kiểm tra thông tin bắt buộc
+    // Validate thông tin bắt buộc
     if (
       !code_coupon ||
       !start_date ||
@@ -175,7 +247,7 @@ exports.AddVouchersAdmin = async (req, res) => {
         .json({ message: "Vui lòng nhập đầy đủ thông tin" });
     }
 
-    // Kiểm tra email đã tồn tại chưa
+    // Kiểm tra code_coupon đã tồn tại chưa
     const [existingVouchers] = await db.query(
       "SELECT * FROM vouchers WHERE code_coupon = ?",
       [code_coupon]
@@ -185,8 +257,9 @@ exports.AddVouchersAdmin = async (req, res) => {
       return res.status(409).json({ message: "Tên khuyến mãi đã tồn tại" });
     }
 
+    // Thêm voucher mới
     const [result] = await db.query(
-      "INSERT INTO vouchers (code_coupon,description,start_date,expires_at,coupon_min_spend,coupon_max_spend,discount,type_coupon,status,quantity,created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,NOW())",
+      "INSERT INTO vouchers (code_coupon, description, start_date, expires_at, coupon_min_spend, coupon_max_spend, discount, type_coupon, status, quantity, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())",
       [
         code_coupon,
         description,
@@ -201,13 +274,35 @@ exports.AddVouchersAdmin = async (req, res) => {
       ]
     );
 
+    // Lấy voucher vừa thêm
     const [newVouchersRows] = await db.query(
       "SELECT * FROM vouchers WHERE id = ?",
       [result.insertId]
     );
+
+    // Lấy tổng số voucher
+    const [totalVouchers] = await db.query(
+      "SELECT COUNT(*) as total FROM vouchers"
+    );
+    const total = totalVouchers[0]?.total || 0;
+
+    // Setup pagination thông số
+    const limitNumber = 10; // Giả sử mặc định là 10 bản ghi mỗi trang (bạn có thể thay đổi)
+    const pageNumber = Math.ceil(total / limitNumber); // Đẩy về trang cuối
+    const offset = (pageNumber - 1) * limitNumber;
+
     res.status(201).json({
       message: "Thêm khuyến mãi thành công",
       data: newVouchersRows[0],
+      meta: {
+        totalItems: total,
+        currentPage: pageNumber,
+        totalPages: Math.ceil(total / limitNumber),
+        perPage: limitNumber,
+        showing: `Hiển thị từ ${offset + 1} đến ${
+          offset + newVouchersRows.length
+        } của ${total} bản ghi`,
+      },
     });
   } catch (error) {
     res.status(500).json({
