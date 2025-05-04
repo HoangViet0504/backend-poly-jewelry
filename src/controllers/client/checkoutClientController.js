@@ -105,9 +105,6 @@
 
 const axios = require("axios");
 const crypto = require("crypto");
-const qs = require("qs");
-const dateFormat = require("dateformat");
-const moment = require("moment");
 const db = require("../../config/connectDb");
 const config = {
   app_id: 2553, // ZaloPay Sandbox app_id v2
@@ -209,11 +206,6 @@ exports.zaloPayCallback = async (req, res) => {
       .json({ return_code: -1, return_message: err.message });
   }
 };
-
-const vnp_TmnCode = "OA8L7WZM";
-const vnp_HashSecret = "096QR2D3D30JZPJ1BE5N5Q9ZAV1SS70Q";
-const vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-const vnp_ReturnUrl = "https://sandbox.vnpayment.vn/return"; // <- đổi thành đúng ReturnUrl cấu hình trong VNPAY
 
 // exports.createVNPayUrl = async (req, res) => {
 //   try {
