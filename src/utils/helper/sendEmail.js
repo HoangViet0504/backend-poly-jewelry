@@ -3,15 +3,15 @@ const nodemailer = require("nodemailer");
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "tiennbaps30960@fpt.edu.vn",
-    pass: "uibq zdpi iauh poks",
+    user: "noreplyvshopsy@gmail.com",
+    pass: "dzh zt jac gi pl t fkt",
   },
 });
 
 const sendRegisterEmail = async (email) => {
   try {
     await transporter.sendMail({
-      from: "noreply-vshopsy@gmail.com",
+      from: "noreplyvshopsy@gmail.com",
       to: email,
       subject: "Cảm ơn bạn đã đăng ký tài khoản!",
       html: `
@@ -36,7 +36,7 @@ const sendRegisterEmail = async (email) => {
 const sendEmailForgotPassword = async (email, otp) => {
   try {
     await transporter.sendMail({
-      from: "tiennbaps30960@fpt.edu.vn",
+      from: "noreplyvshopsy@gmail.com",
       to: email,
       subject: "Cảm ơn bạn đã đăng ký tài khoản!",
       html: `
