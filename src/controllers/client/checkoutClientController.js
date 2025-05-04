@@ -108,8 +108,7 @@ const crypto = require("crypto");
 const qs = require("qs");
 const dateFormat = require("dateformat");
 const moment = require("moment");
-const db = require("../../config/connectDB");
-
+const db = require("../../config/connectDb");
 const config = {
   app_id: 2553, // ZaloPay Sandbox app_id v2
   key1: "PcY4iZIKFCIdgZvA6ueMcMHHUbRLYjPL", // Sandbox key1

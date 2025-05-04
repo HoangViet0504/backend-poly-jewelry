@@ -1,5 +1,4 @@
-const db = require("../../config/connectDB");
-
+const db = require("../../config/connectDb");
 exports.getListCategories = async (req, res) => {
   try {
     // Truy vấn thông tin người dùng từ database

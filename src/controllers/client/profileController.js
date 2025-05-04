@@ -1,5 +1,4 @@
-const db = require("../../config/connectDB");
-
+const db = require("../../config/connectDb");
 const bcrypt = require("bcrypt");
 
 exports.UpdateUser = async (req, res) => {

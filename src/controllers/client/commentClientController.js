@@ -1,5 +1,4 @@
-const db = require("../../config/connectDB");
-
+const db = require("../../config/connectDb");
 exports.getCommentByIdProduct = async (req, res) => {
   try {
     const { slug } = req.query;

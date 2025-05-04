@@ -1,5 +1,4 @@
-const db = require("../../config/connectDB");
-
+const db = require("../../config/connectDb");
 exports.getListCartByUser = async (req, res) => {
   try {
     const { id } = req.query;

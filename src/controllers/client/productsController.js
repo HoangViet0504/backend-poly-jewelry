@@ -1,5 +1,4 @@
-const db = require("../../config/connectDB");
-
+const db = require("../../config/connectDb");
 exports.getListProductsSaleDescClient = async (req, res) => {
   try {
     // Lấy sản phẩm phân trang
