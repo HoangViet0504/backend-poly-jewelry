@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
 const sendRegisterEmail = async (email) => {
   try {
     await transporter.sendMail({
-      from: "tiennbaps30960@fpt.edu.vn",
+      from: "noreply-vshopsy@gmail.com",
       to: email,
       subject: "Cảm ơn bạn đã đăng ký tài khoản!",
       html: `
