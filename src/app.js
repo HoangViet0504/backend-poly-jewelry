@@ -4,7 +4,7 @@ const cors = require("cors");
 const router = require("./routes/userRoutes");
 app.use(
   cors({
-    origin: "http://localhost:5173", // Frontend của bạn
+    origin: "*", // Frontend của bạn
     credentials: true, // Cho phép cookie/token
   })
 );
