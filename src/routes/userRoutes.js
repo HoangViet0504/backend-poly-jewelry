@@ -319,4 +319,12 @@ router.post("/createOrderDetail", checkOut.createOrderDetail);
 router.get("/getHistoryCart", checkOut.getHistoryCart);
 router.post("/cancelOrder", checkOut.cancelOrder);
 
+// update order status
+router.post("/updateOrderStatus", checkOut.updateOrderStatus);
+router.get("/checkOrderStatus/:orderId", checkOut.checkOrderStatus);
+
+
+// payment sepay
+router.post("/createOrderSepay", checkOut.createOrderSepay);
+
 module.exports = router;

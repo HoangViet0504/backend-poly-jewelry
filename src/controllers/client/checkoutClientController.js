@@ -107,105 +107,187 @@ const axios = require("axios");
 const crypto = require("crypto");
 const db = require("../../config/connectDb");
 const config = {
-  app_id: 2553, // ZaloPay Sandbox app_id v2
-  key1: "PcY4iZIKFCIdgZvA6ueMcMHHUbRLYjPL", // Sandbox key1
-  key2: "eG4r0GcoNtRGbO8", // Sandbox key2
-  endpoint: "https://sb-openapi.zalopay.vn/v2/create",
-  callback_url: "http://localhost:3000/zaloPayCallback",
+    app_id: 2553, // ZaloPay Sandbox app_id v2
+    key1: "PcY4iZIKFCIdgZvA6ueMcMHHUbRLYjPL", // Sandbox key1
+    key2: "eG4r0GcoNtRGbO8", // Sandbox key2
+    endpoint: "https://sb-openapi.zalopay.vn/v2/create",
+    callback_url: "http://localhost:3000/zaloPayCallback",
 };
 
 // API tạo đơn hàng ZaloPay
 exports.checkOut = async (req, res) => {
-  try {
-    const { amount, userId } = req.body;
+    try {
+        const { amount, userId, idOrder } = req.body;
 
-    const embed_data = {
-      preferred_payment_method: ["ATM"], // hoặc ["zalopayapp"]
-      redirecturl: "http://localhost:5173/checkout-success",
-    };
+        const embed_data = {
+            preferred_payment_method: ["ATM"], // hoặc ["zalopayapp"]
+            redirecturl: "http://localhost:5173/checkout-success",
+        };
 
-    const items = []; // Mảng chi tiết sản phẩm nếu cần
+        const items = []; // Mảng chi tiết sản phẩm nếu cần
 
-    const now = Date.now();
-    const date = new Date(now);
-    const app_trans_id = `${date.getFullYear().toString().slice(2)}${(
-      date.getMonth() + 1
-    )
-      .toString()
-      .padStart(2, "0")}${date.getDate().toString().padStart(2, "0")}_${now}`;
+        const now = Date.now();
+        const date = new Date(now);
+        const app_trans_id = `${date.getFullYear().toString().slice(2)}${(
+            date.getMonth() + 1
+        )
+            .toString()
+            .padStart(2, "0")}${date
+            .getDate()
+            .toString()
+            .padStart(2, "0")}_${idOrder}`;
 
-    const data = {
-      app_id: config.app_id,
-      app_user: `user_${userId}`,
-      app_time: now,
-      amount,
-      app_trans_id,
-      embed_data: JSON.stringify(embed_data),
-      item: JSON.stringify(items),
-      callback_url: config.callback_url,
-      description: `Thanh toán đơn hàng #${app_trans_id}`,
-      bank_code: "",
-    };
+        const data = {
+            app_id: config.app_id,
+            app_user: `user_${userId}`,
+            app_time: now,
+            amount,
+            app_trans_id: app_trans_id,
+            embed_data: JSON.stringify(embed_data),
+            item: JSON.stringify(items),
+            callback_url: config.callback_url,
+            description: `Thanh toán đơn hàng #${idOrder}`,
+            bank_code: "",
+        };
 
-    const dataString = `${data.app_id}|${data.app_trans_id}|${data.app_user}|${data.amount}|${data.app_time}|${data.embed_data}|${data.item}`;
-    data.mac = crypto
-      .createHmac("sha256", config.key1)
-      .update(dataString)
-      .digest("hex");
+        const dataString = `${data.app_id}|${data.app_trans_id}|${data.app_user}|${data.amount}|${data.app_time}|${data.embed_data}|${data.item}`;
 
-    const response = await axios.post(config.endpoint, data, {
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-    });
+        data.mac = crypto
+            .createHmac("sha256", config.key1)
+            .update(dataString)
+            .digest("hex");
 
-    res.json({
-      message: "Tạo đơn hàng thành công",
-      data: response.data,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Lỗi khi tạo đơn hàng",
-      error: error.response?.data || error.message,
-    });
-  }
+        const response = await axios.post(config.endpoint, data, {
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+        });
+
+        res.json({
+            message: "Tạo đơn hàng thành công",
+            data: response.data,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Lỗi khi tạo đơn hàng",
+            error: error.response?.data || error.message,
+        });
+    }
 };
 
 // API xử lý callback từ ZaloPay
 exports.zaloPayCallback = async (req, res) => {
-  try {
-    const { data, mac } = req.body;
+    try {
+        const { data, mac } = req.body;
 
-    const macCalc = crypto
-      .createHmac("sha256", config.key2)
-      .update(data)
-      .digest("hex");
+        const macCalc = crypto
+            .createHmac("sha256", config.key2)
+            .update(data)
+            .digest("hex");
 
-    if (mac !== macCalc) {
-      console.log("❌ Sai chữ ký callback");
-      return res
-        .status(400)
-        .json({ return_code: -1, return_message: "Invalid MAC" });
+        if (mac !== macCalc) {
+            return res
+                .status(400)
+                .json({ return_code: -1, return_message: "Invalid MAC" });
+        }
+
+        const resultData = JSON.parse(data);
+
+        const {
+            app_trans_id,
+            status,
+            zp_trans_id,
+            server_time,
+            user_id,
+            amount,
+        } = resultData;
+
+        if (status === 1) {
+            console.log(`✅ Đơn hàng ${app_trans_id} thanh toán thành công`);
+        } else {
+            console.log(`❌ Đơn hàng ${app_trans_id} thất bại`);
+        }
+
+        return res.json({
+            return_code: 1,
+            return_message: "Callback received",
+        });
+    } catch (err) {
+        console.error("Lỗi xử lý callback:", err.message);
+        return res
+            .status(500)
+            .json({ return_code: -1, return_message: err.message });
     }
-
-    const resultData = JSON.parse(data);
-    const { app_trans_id, status, zp_trans_id, server_time, user_id, amount } =
-      resultData;
-
-    if (status === 1) {
-      console.log(`✅ Đơn hàng ${app_trans_id} thanh toán thành công`);
-    } else {
-      console.log(`❌ Đơn hàng ${app_trans_id} thất bại`);
-    }
-
-    return res.json({ return_code: 1, return_message: "Callback received" });
-  } catch (err) {
-    console.error("Lỗi xử lý callback:", err.message);
-    return res
-      .status(500)
-      .json({ return_code: -1, return_message: err.message });
-  }
 };
+
+//  update order status after payment
+exports.updateOrderStatus = async (req, res) => {
+    try {
+        const { orderId, status, dataObj } = req.body;
+
+        // const dataString = `${dataObj.amount}|${dataObj.appid}|${dataObj.apptransid}|${dataObj.bankcode}|${dataObj.discountamount}|${dataObj.pmcid}|${dataObj.status}`;
+        
+        // const macData = crypto.createHmac("sha256", config.key1).update(dataString).digest("hex");
+
+        // if (dataObj.checksum !== macData) {
+        //     console.log(dataObj.checksum, macData);
+        //     console.log("❌ Sai chữ ký callback");
+        //     return res.status(400).json({
+        //         message: "Invalid MAC",
+        //         data: [],
+        //     });
+        // }
+
+        const [response] = await db.query(
+            "UPDATE orders SET status = ? WHERE id = ?",
+            [status, orderId]
+        );
+        if (response.affectedRows > 0) {
+            return res.json({
+                message: "Cập nhật trạng thái đơn hàng thành công",
+                data: { orderId, status },
+            });
+        } else {
+            return res.status(404).json({
+                message: "Đơn hàng không tồn tại",
+                data: [],
+            });
+        }
+    } catch (error) {
+        return res.status(500).json({
+            message: "Lỗi khi cập nhật trạng thái đơn hàng",
+            error: error.message,
+        });
+    }
+};
+
+exports.checkOrderStatus = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+
+        const [response] = await db.query(
+            "SELECT status FROM orders WHERE id = ?",
+            [orderId]
+        );
+
+        if (response.length > 0) {
+            return res.json({
+                message: "Lấy trạng thái đơn hàng thành công",
+                data: response[0].status,
+            });
+        } else {
+            return res.status(404).json({
+                message: "Đơn hàng không tồn tại",
+                data: [],
+            });
+        }
+    } catch (error) {
+        return res.status(500).json({
+            message: "Lỗi khi lấy trạng thái đơn hàng",
+            error: error.message,
+        });
+    }
+}
 
 // exports.createVNPayUrl = async (req, res) => {
 //   try {
@@ -404,133 +486,151 @@ exports.zaloPayCallback = async (req, res) => {
 // };
 
 exports.createOrder = async (req, res) => {
-  try {
-    const {
-      name,
-      phone,
-      email,
-      address,
-      note,
-      id_user,
-      total_amount,
-      payment_method,
-      discount,
-    } = req.body;
-    const [response] = await db.query(
-      `INSERT INTO orders (name, phone, email, address, note,  id_user, total_amount, payment_method, discount, fee_shipping,created_at) VALUES (?,?,?,?,?,?,?,?,?,0,NOW())`,
-      [
-        name,
-        phone,
-        email,
-        address,
-        note,
-        id_user,
-        total_amount,
-        payment_method,
-        discount,
-      ]
-    );
+    try {
+        const {
+            name,
+            phone,
+            email,
+            address,
+            note,
+            id_user,
+            total_amount,
+            payment_method,
+            discount,
+        } = req.body;
+        const [response] = await db.query(
+            `INSERT INTO orders (name, phone, email, address, note,  id_user, total_amount, payment_method, discount, fee_shipping,created_at) VALUES (?,?,?,?,?,?,?,?,?,0,NOW())`,
+            [
+                name,
+                phone,
+                email,
+                address,
+                note,
+                id_user,
+                total_amount,
+                payment_method,
+                discount,
+            ]
+        );
 
-    return res.json({
-      message: "Tạo đơn hàng thành công",
-      data: response.insertId,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: "Lỗi khi tạo đơn hàng",
-      error: error.message,
-    });
-  }
+        return res.json({
+            message: "Tạo đơn hàng thành công",
+            data: response.insertId,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: "Lỗi khi tạo đơn hàng",
+            error: error.message,
+        });
+    }
 };
 
 exports.createOrderDetail = async (req, res) => {
-  try {
-    const {
-      id_order,
-      id_product,
-      quantity,
-      price,
-      made,
-      size,
-      id_user,
-      name_product,
-      primary_image,
-      slug,
-    } = req.body;
-    await db.query(
-      `INSERT INTO order_detail (id_order, id_product,primary_image,name_product,slug, quantity, price,made,size,created_at) VALUES (?,?,?,?,?,?,?,?,?,NOW())`,
-      [
-        id_order,
-        id_product,
-        primary_image,
-        name_product,
-        slug,
-        quantity,
-        price,
-        made,
-        size,
-      ]
-    );
-    await db.query("DELETE FROM carts WHERE id_user = ?", [id_user]);
-    await db.query(
-      "UPDATE products SET quantity = quantity - ?, sale_quantity = ? WHERE id = ?",
-      [quantity, quantity, id_product]
-    );
-    const [responseOrder] = await db.query(
-      "SELECT * FROM orders INNER JOIN order_detail ON orders.id = order_detail.id_order WHERE orders.id = ?",
-      [id_order]
-    );
-    return res.json({
-      message: "Tạo đơn hàng thành công",
-      data: responseOrder,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: "Lỗi khi tạo đơn hàng chi tiết",
-      error: error.message,
-    });
-  }
+    try {
+        const {
+            id_order,
+            id_product,
+            quantity,
+            price,
+            made,
+            size,
+            id_user,
+            name_product,
+            primary_image,
+            slug,
+        } = req.body;
+        await db.query(
+            `INSERT INTO order_detail (id_order, id_product,primary_image,name_product,slug, quantity, price,made,size,created_at) VALUES (?,?,?,?,?,?,?,?,?,NOW())`,
+            [
+                id_order,
+                id_product,
+                primary_image,
+                name_product,
+                slug,
+                quantity,
+                price,
+                made,
+                size,
+            ]
+        );
+        await db.query("DELETE FROM carts WHERE id_user = ?", [id_user]);
+        await db.query(
+            "UPDATE products SET quantity = quantity - ?, sale_quantity = ? WHERE id = ?",
+            [quantity, quantity, id_product]
+        );
+        const [responseOrder] = await db.query(
+            "SELECT * FROM orders INNER JOIN order_detail ON orders.id = order_detail.id_order WHERE orders.id = ?",
+            [id_order]
+        );
+        return res.json({
+            message: "Tạo đơn hàng thành công",
+            data: responseOrder,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: "Lỗi khi tạo đơn hàng chi tiết",
+            error: error.message,
+        });
+    }
 };
 
 exports.getHistoryCart = async (req, res) => {
-  try {
-    const { id_user } = req.query;
-    const [response] = await db.query(
-      "SELECT * FROM orders INNER JOIN order_detail ON orders.id = order_detail.id_order  WHERE orders.id_user = ? ORDER BY orders.created_at DESC",
-      [id_user]
-    );
-    return res.json({
-      message: "Lấy lịch sử đơn hàng thành công",
-      data: response,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: "Lỗi khi tạo đơn hàng chi tiết",
-      error: error.message,
-    });
-  }
+    try {
+        const { id_user } = req.query;
+        const [response] = await db.query(
+            "SELECT * FROM orders INNER JOIN order_detail ON orders.id = order_detail.id_order  WHERE orders.id_user = ? ORDER BY orders.created_at DESC",
+            [id_user]
+        );
+        return res.json({
+            message: "Lấy lịch sử đơn hàng thành công",
+            data: response,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: "Lỗi khi tạo đơn hàng chi tiết",
+            error: error.message,
+        });
+    }
 };
 
 exports.cancelOrder = async (req, res) => {
-  try {
-    const { id_order, id_user } = req.body;
-    await db.query("UPDATE orders SET status = ? WHERE id = ?", [
-      "cancel",
-      id_order,
-    ]);
-    const [response] = await db.query(
-      "SELECT * FROM orders INNER JOIN order_detail ON orders.id = order_detail.id_order  WHERE orders.id_user = ? ORDER BY orders.created_at DESC",
-      [id_user]
-    );
+    try {
+        const { id_order, id_user } = req.body;
+        await db.query("UPDATE orders SET status = ? WHERE id = ?", [
+            "cancel",
+            id_order,
+        ]);
+        const [response] = await db.query(
+            "SELECT * FROM orders INNER JOIN order_detail ON orders.id = order_detail.id_order  WHERE orders.id_user = ? ORDER BY orders.created_at DESC",
+            [id_user]
+        );
 
-    return res.json({
-      message: "Hủy đơn hàng thành công",
-      data: response,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: "Lỗi khi hủy đơn hàng",
-      error: error.message,
-    });
-  }
+        return res.json({
+            message: "Hủy đơn hàng thành công",
+            data: response,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: "Lỗi khi hủy đơn hàng",
+            error: error.message,
+        });
+    }
+};
+
+// payment for sepay
+exports.createOrderSepay = async (req, res) => {
+    const {
+        id,
+        gateway,
+        transactionDate,
+        accountNumber,
+        code,
+        content,
+        transferType,
+        transferAmount,
+        accumulated,
+        subAccount,
+        referenceCode,
+        description,
+    } = req.body;
 };
