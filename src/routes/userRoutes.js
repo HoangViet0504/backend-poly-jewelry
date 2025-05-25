@@ -30,43 +30,43 @@ router.get("/getRevenueChartByMode", overViewController.getRevenueChartByMode);
 router.get("/getProductSale", overViewController.getProductSale);
 
 router.get(
-  "/getNewProductCountLast30Days",
-  overViewController.getNewProductCountLast30Days
+    "/getNewProductCountLast30Days",
+    overViewController.getNewProductCountLast30Days
 );
 router.get(
-  "/getVoucherStatsLast30Days",
-  overViewController.getVoucherStatsLast30Days
+    "/getVoucherStatsLast30Days",
+    overViewController.getVoucherStatsLast30Days
 );
 router.get("/getOrderNew", overViewController.getOrderNew);
 
 router.get(
-  "/getTotalOrdersLast30Days",
-  overViewController.getTotalOrdersLast30Days
+    "/getTotalOrdersLast30Days",
+    overViewController.getTotalOrdersLast30Days
 );
 // dashboard
 // User
 router.get("/getListUserAdmin", userController.getListUserAdmin);
 router.get(
-  "/getListUserRemoveAdmin",
+    "/getListUserRemoveAdmin",
 
-  userController.getListUserRemoveAdmin
+    userController.getListUserRemoveAdmin
 );
 router.get(
-  "/getListUserAdminByKeyWord",
+    "/getListUserAdminByKeyWord",
 
-  userController.getListUserAdminByKeyWord
+    userController.getListUserAdminByKeyWord
 );
 router.get("/getUserAdmin", userController.getUserAdmin);
 router.post("/AddUserAdmin", userController.AddUserAdmin);
 router.post(
-  "/DeleteUserAdminByIsDelete",
+    "/DeleteUserAdminByIsDelete",
 
-  userController.DeleteUserAdminByIsDelete
+    userController.DeleteUserAdminByIsDelete
 );
 router.post(
-  "/RevertDeleteUserAdminByIsDelete",
+    "/RevertDeleteUserAdminByIsDelete",
 
-  userController.RevertDeleteUserAdminByIsDelete
+    userController.RevertDeleteUserAdminByIsDelete
 );
 router.post("/DeleteUserAdmin", userController.DeleteUserAdmin);
 router.post("/UpdateUserAdmin", userController.UpdateUserAdmin);
@@ -82,153 +82,153 @@ router.post("/DeleteCommentAdmin", commentController.DeleteCommentAdmin);
 //  categories
 
 router.get(
-  "/getListCategoriesAdmin",
+    "/getListCategoriesAdmin",
 
-  categoriesController.getListCategoriesAdmin
+    categoriesController.getListCategoriesAdmin
 );
 router.get(
-  "/getListCategoriesAdminByKeyWord",
+    "/getListCategoriesAdminByKeyWord",
 
-  categoriesController.getListCategoriesAdminByKeyWord
+    categoriesController.getListCategoriesAdminByKeyWord
 );
 router.get(
-  "/getListCategoriesRemoveAdmin",
+    "/getListCategoriesRemoveAdmin",
 
-  categoriesController.getListCategoriesRemoveAdmin
+    categoriesController.getListCategoriesRemoveAdmin
 );
 router.get("/getCategoriesAdminById", categoriesController.getCategoriesAdmin);
 router.post(
-  "/DeleteCategoriesAdminByIsDelete",
+    "/DeleteCategoriesAdminByIsDelete",
 
-  categoriesController.DeleteCategoriesAdminByIsDelete
+    categoriesController.DeleteCategoriesAdminByIsDelete
 );
 router.post(
-  "/AddCategoriesAdmin",
+    "/AddCategoriesAdmin",
 
-  categoriesController.AddCategoriesAdmin
+    categoriesController.AddCategoriesAdmin
 );
 router.post(
-  "/RevertDeleteCategoriesAdminByIsDelete",
+    "/RevertDeleteCategoriesAdminByIsDelete",
 
-  categoriesController.RevertDeleteCategoriesAdminByIsDelete
+    categoriesController.RevertDeleteCategoriesAdminByIsDelete
 );
 router.post(
-  "/DeleteCategoriesAdmin",
+    "/DeleteCategoriesAdmin",
 
-  categoriesController.DeleteCategoriesAdmin
+    categoriesController.DeleteCategoriesAdmin
 );
 router.post(
-  "/UpdateCategoriesAdmin",
+    "/UpdateCategoriesAdmin",
 
-  categoriesController.UpdateCategoriesAdmin
+    categoriesController.UpdateCategoriesAdmin
 );
 
 // images
 router.get(
-  "/getGroupedImageProducts",
+    "/getGroupedImageProducts",
 
-  imagesController.getGroupedImageProducts
+    imagesController.getGroupedImageProducts
 );
 router.get(
-  "/getAllProducts",
+    "/getAllProducts",
 
-  imagesController.getAllProducts
+    imagesController.getAllProducts
 );
 router.post(
-  "/addImageProduct",
+    "/addImageProduct",
 
-  imagesController.addImageProduct
+    imagesController.addImageProduct
 );
 router.post(
-  "/deletedImageProduct",
+    "/deletedImageProduct",
 
-  imagesController.deletedImageProduct
+    imagesController.deletedImageProduct
 );
 
 // products
 router.get(
-  "/getListProductsAdmin",
+    "/getListProductsAdmin",
 
-  productsController.getListProductsAdmin
+    productsController.getListProductsAdmin
 );
 
 router.get(
-  "/getListProductsCollectionAdmin",
+    "/getListProductsCollectionAdmin",
 
-  productsController.getListProductsCollectionAdmin
+    productsController.getListProductsCollectionAdmin
 );
 router.get(
-  "/getListProductsAdminByKeyWord",
+    "/getListProductsAdminByKeyWord",
 
-  productsController.getListProductsAdminByKeyWord
+    productsController.getListProductsAdminByKeyWord
 );
 router.get(
-  "/getListProductsRemoveAdmin",
+    "/getListProductsRemoveAdmin",
 
-  productsController.getListProductsRemoveAdmin
+    productsController.getListProductsRemoveAdmin
 );
 router.get("/getProductAdmin", productsController.getProductAdmin);
 router.post(
-  "/AddProductsAdmin",
+    "/AddProductsAdmin",
 
-  productsController.AddProductsAdmin
+    productsController.AddProductsAdmin
 );
 router.post(
-  "/DeleteProductsAdminByIsDelete",
+    "/DeleteProductsAdminByIsDelete",
 
-  productsController.DeleteProductsAdminByIsDelete
+    productsController.DeleteProductsAdminByIsDelete
 );
 router.post(
-  "/RevertDeleteProductsAdminByIsDelete",
+    "/RevertDeleteProductsAdminByIsDelete",
 
-  productsController.RevertDeleteProductsAdminByIsDelete
+    productsController.RevertDeleteProductsAdminByIsDelete
 );
 router.post(
-  "/DeleteProductsAdmin",
+    "/DeleteProductsAdmin",
 
-  productsController.DeleteProductsAdmin
+    productsController.DeleteProductsAdmin
 );
 router.post(
-  "/UpdateProductsAdmin",
+    "/UpdateProductsAdmin",
 
-  productsController.UpdateProductsAdmin
+    productsController.UpdateProductsAdmin
 );
 // Voucher
 router.get(
-  "/getListVouchersAdmin",
+    "/getListVouchersAdmin",
 
-  voucherController.getListVouchersAdmin
+    voucherController.getListVouchersAdmin
 );
 router.get(
-  "/getListVouchersAdminByKeyWord",
+    "/getListVouchersAdminByKeyWord",
 
-  voucherController.getListVouchersAdminByKeyWord
+    voucherController.getListVouchersAdminByKeyWord
 );
 router.get("/getVouchersAdmin", voucherController.getVouchersAdmin);
 router.post("/AddVouchersAdmin", voucherController.AddVouchersAdmin);
 router.post(
-  "/DeleteVouchersAdmin",
+    "/DeleteVouchersAdmin",
 
-  voucherController.DeleteVouchersAdmin
+    voucherController.DeleteVouchersAdmin
 );
 router.post(
-  "/UpdateVouchersAdmin",
+    "/UpdateVouchersAdmin",
 
-  voucherController.UpdateVouchersAdmin
+    voucherController.UpdateVouchersAdmin
 );
 // orders
 router.get("/getHistoryCartAdmin", ordersController.getHistoryCartAdmin);
 
 router.get(
-  "/getListOrdersAdminByKeyWord",
+    "/getListOrdersAdminByKeyWord",
 
-  ordersController.getListOrdersAdminByKeyWord
+    ordersController.getListOrdersAdminByKeyWord
 );
 router.get("/getOrdersAdmin", ordersController.getOrdersAdmin);
 router.post(
-  "/UpdateOrdersAdmin",
+    "/UpdateOrdersAdmin",
 
-  ordersController.UpdateOrdersAdmin
+    ordersController.UpdateOrdersAdmin
 );
 
 //  client
@@ -242,52 +242,52 @@ router.get("/getListOrdersClient", profileClientController.getListOrdersClient);
 router.get("/getAddressById", profileClientController.getAddressById);
 
 router.get(
-  "/getListOrdersDetailClient",
-  profileClientController.getListOrdersDetailClient
+    "/getListOrdersDetailClient",
+    profileClientController.getListOrdersDetailClient
 );
 
 // products
 router.get(
-  "/getListProductsByCategoriesClient",
-  productsClientController.getListProductsByCategoriesClient
+    "/getListProductsByCategoriesClient",
+    productsClientController.getListProductsByCategoriesClient
 );
 router.get(
-  "/getGroupedImageProductsDetail",
-  productsClientController.getGroupedImageProductsDetail
-);
-
-router.get(
-  "/getListProductsBySlugClient",
-  productsClientController.getListProductsBySlugClient
-);
-router.get(
-  "/getListProductCollection",
-  productsClientController.getListProductCollection
-);
-router.get(
-  "/getListProductsSaleDescClient",
-  productsClientController.getListProductsSaleDescClient
+    "/getGroupedImageProductsDetail",
+    productsClientController.getGroupedImageProductsDetail
 );
 
 router.get(
-  "/getListProductsCreateDescClient",
-  productsClientController.getListProductsCreateDescClient
+    "/getListProductsBySlugClient",
+    productsClientController.getListProductsBySlugClient
 );
 router.get(
-  "/getListProductsSaleClient",
-  productsClientController.getListProductsSaleClient
+    "/getListProductCollection",
+    productsClientController.getListProductCollection
+);
+router.get(
+    "/getListProductsSaleDescClient",
+    productsClientController.getListProductsSaleDescClient
+);
+
+router.get(
+    "/getListProductsCreateDescClient",
+    productsClientController.getListProductsCreateDescClient
+);
+router.get(
+    "/getListProductsSaleClient",
+    productsClientController.getListProductsSaleClient
 );
 router.get("/getProductDetail", productsClientController.getProductDetail);
 router.get(
-  "/getProductSameIdCategories",
-  productsClientController.getProductSameIdCategories
+    "/getProductSameIdCategories",
+    productsClientController.getProductSameIdCategories
 );
 router.get("/getProductFavorite", productsClientController.getProductFavorite);
 router.post("/addProductFavorite", productsClientController.addProductFavorite);
 
 router.get(
-  "/getListProductFavoriteByUser",
-  productsClientController.getListProductFavoriteByUser
+    "/getListProductFavoriteByUser",
+    productsClientController.getListProductFavoriteByUser
 );
 
 router.get("/getListCartByUser", cartsClientController.getListCartByUser);
@@ -298,19 +298,19 @@ router.post("/getVoucherByCode", cartsClientController.getVoucherByCode);
 
 router.post("/deleteAllCart", cartsClientController.deleteAllCart);
 router.get(
-  "/getProductDetailInCart",
-  cartsClientController.getProductDetailInCart
+    "/getProductDetailInCart",
+    cartsClientController.getProductDetailInCart
 );
 
 router.post("/mergeCart", cartsClientController.mergeCart);
 // comment
 router.get(
-  "/getCommentByIdProduct",
-  commentClientController.getCommentByIdProduct
+    "/getCommentByIdProduct",
+    commentClientController.getCommentByIdProduct
 );
 router.post(
-  "/postCommentByIdProduct",
-  commentClientController.postCommentByIdProduct
+    "/postCommentByIdProduct",
+    commentClientController.postCommentByIdProduct
 );
 router.post("/checkOut", checkOut.checkOut);
 router.post("/zaloPayCallback", checkOut.zaloPayCallback);
@@ -323,6 +323,7 @@ router.post("/cancelOrder", checkOut.cancelOrder);
 router.post("/updateOrderStatus", checkOut.updateOrderStatus);
 router.get("/checkOrderStatus/:orderId", checkOut.checkOrderStatus);
 
+router.get("/getorder", checkOut.getOrderDetail);
 
 // payment sepay
 router.post("/createOrderSepay", checkOut.createOrderSepay);

@@ -226,7 +226,7 @@ exports.updateOrderStatus = async (req, res) => {
         const { orderId, status, dataObj } = req.body;
 
         // const dataString = `${dataObj.amount}|${dataObj.appid}|${dataObj.apptransid}|${dataObj.bankcode}|${dataObj.discountamount}|${dataObj.pmcid}|${dataObj.status}`;
-        
+
         // const macData = crypto.createHmac("sha256", config.key1).update(dataString).digest("hex");
 
         // if (dataObj.checksum !== macData) {
@@ -287,7 +287,7 @@ exports.checkOrderStatus = async (req, res) => {
             error: error.message,
         });
     }
-}
+};
 
 // exports.createVNPayUrl = async (req, res) => {
 //   try {
@@ -633,4 +633,87 @@ exports.createOrderSepay = async (req, res) => {
         referenceCode,
         description,
     } = req.body;
+
+    const idOrder = content.replace("NAP", "");
+    const [rowQuery] = await db.query(
+        "SELECT * FROM sepay_transactions WHERE id_sepay = ? LIMIT 1",
+        [id]
+    );
+    if (rowQuery.length > 0) {
+        return res.status(400).json({
+            message: `Đơn hàng ${idOrder} đã tồn tại`,
+            data: [],
+        });
+    }
+
+    try {
+        const [response] = await db.query(
+            `INSERT INTO sepay_transactions (id_sepay, gateway, transactionDate, accountNumber, code, content, transferType, transferAmount, accumulated, subAccount, referenceCode, description) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+            [
+                id,
+                gateway,
+                transactionDate,
+                accountNumber,
+                code,
+                content,
+                transferType,
+                transferAmount,
+                accumulated,
+                subAccount,
+                referenceCode,
+                description,
+            ]
+        );
+
+        // query orders table to get the order id
+        const [orderResponse] = await db.query(
+            "SELECT status FROM orders WHERE id = ?",
+            [idOrder]
+        );
+
+        if (orderResponse.length > 0) {
+            await db.query("UPDATE orders SET status = ? WHERE id = ?", [
+                "success",
+                idOrder,
+            ]);
+        }
+
+        return res.json({
+            message: "Thanh toán thành công",
+            data: response.insertId,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: "Thanh toán thất bại",
+            error: error.message,
+        });
+    }
+};
+
+exports.getOrderDetail = async (req, res) => {
+    const { orderId, userId } = req.query;
+
+    try {
+        const [response] = await db.query(
+            "SELECT * FROM orders INNER JOIN order_detail ON orders.id = order_detail.id_order WHERE orders.id_user = ? and orders.id = ? ORDER BY orders.id DESC LIMIT 1",
+            [userId, orderId]
+        );
+
+        if (response.length > 0) {
+            return res.json({
+                message: "Lấy chi tiết đơn hàng thành công",
+                data: response,
+            });
+        } else {
+            return res.status(404).json({
+                message: "Đơn hàng không tồn tại",
+                data: [],
+            });
+        }
+    } catch (error) {
+        return res.status(500).json({
+            message: "Lỗi khi lấy chi tiết đơn hàng",
+            error: error.message,
+        });
+    }
 };
