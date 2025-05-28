@@ -673,7 +673,7 @@ exports.createOrderSepay = async (req, res) => {
 
         if (orderResponse.length > 0) {
             await db.query("UPDATE orders SET status = ? WHERE id = ?", [
-                "success",
+                "new",
                 idOrder,
             ]);
         }
