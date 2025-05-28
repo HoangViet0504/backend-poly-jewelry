@@ -634,7 +634,9 @@ exports.createOrderSepay = async (req, res) => {
         description,
     } = req.body;
 
-    const idOrder = content.replace("NAP", "");
+    const match = content.match(/NAP(\d+)/);
+    const idOrder = match[1];
+
     const [rowQuery] = await db.query(
         "SELECT * FROM sepay_transactions WHERE id_sepay = ? LIMIT 1",
         [id]
@@ -667,9 +669,19 @@ exports.createOrderSepay = async (req, res) => {
 
         // query orders table to get the order id
         const [orderResponse] = await db.query(
-            "SELECT status FROM orders WHERE id = ?",
+            "SELECT * FROM orders WHERE id = ?",
             [idOrder]
         );
+
+        // check order === transferAmount
+        // if (orderResponse.length > 0) {
+        //     if (orderResponse[0].total_amount !== transferAmount) {
+        //         return res.status(400).json({
+        //             message: `Số tiền chuyển khoản không đúng với đơn hàng ${idOrder}`,
+        //             data: [],
+        //         });
+        //     }
+        // }
 
         if (orderResponse.length > 0) {
             await db.query("UPDATE orders SET status = ? WHERE id = ?", [
